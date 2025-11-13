@@ -31,5 +31,5 @@
 ### 1. 저장소 클론 (Clone Repository)
 
 ```bash
-git clone [저장소 URL]
+git clone https://github.com/2025WebProgramming-Group8/2025-2_Web.git
 cd 2025-2_Web
