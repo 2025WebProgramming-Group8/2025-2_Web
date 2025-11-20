@@ -48,7 +48,7 @@
 | 조장 | [김재민] | [@Jaem1nKim] | [jmkim0212@yonsei.ac.kr] |
 | 조원 | [박정우] | [@qwfmok] | [pdnrdl2@yonsei.ac.kr] |
 | 조원 | [장현빈] | [@github-id] | [] |
-| 조원 | [박성준] | [@github-id] | [] |
+| 조원 | [박성준] | [@github-id] | [parkstarj@yonsei.ac.kr] |
 | 조원 | [이준홍] | [@github-id] | [] |
 
 ## 🚀 시작 방법 (Getting Started)
@@ -60,3 +60,4 @@
 ```bash
 git clone https://github.com/2025WebProgramming-Group8/2025-2_Web.git
 cd 2025-2_Web
+
