@@ -1,0 +1,16 @@
+<nav class="gnb" aria-label="Global Navigation">
+  <div class="inner">
+    <div class="brand"><span class="dot"></span>LAZYCAT</div>
+    <div class="nav" role="menubar">
+      <a role="menuitem" href="{% url 'board' %}">게시판</a>
+      
+      <a role="menuitem" href="{% url 'ranking' %}">랭킹</a>
+      
+      <a role="menuitem" href="{% url 'timer' group_code='TESTCODE' %}">타이머</a>
+      
+      <a role="menuitem" href="{% url 'profile' %}">프로필</a>
+      
+      <a role="menuitem" href="{% url 'login' %}">로그인</a>
+    </div>
+  </div>
+</nav>

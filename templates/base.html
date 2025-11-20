@@ -1,0 +1,31 @@
+{% load static %} 
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LazyCat · {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+</head>
+<body class="page-{% if request.resolver_match.url_name %}{{ request.resolver_match.url_name }}{% else %}home{% endif %}">
+    
+    {% include 'gnb.html' %} 
+
+    {% block top_area %}
+    {% endblock %}
+    
+    {% block header_content %}
+    {% endblock %}
+
+    <main class="wrap">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    {% block chat_input %}
+    {% endblock %}
+    
+    {% include 'footer.html' %} 
+</body>
+</html>
