@@ -17,7 +17,7 @@
 ## 📂 프로젝트 구조 (Project Structure)
 
 본 프로젝트는 팀 규정 및 Django 초기 생성 구조에 따라, `config` 폴더가 프로젝트 설정과 메인 앱 역할을 모두 담당하는 형태로 구성되어 있습니다.
-'''
+```
 2025-2_Web/
 ├── manage.py                  # 서버 실행, 마이그레이션 등 Django 관리 명령어
 ├── db.sqlite3                 # SQLite 데이터베이스 파일
@@ -40,7 +40,7 @@
 │   └── timer.html             # 타이머 페이지
 └── static/                    # 정적 파일
     └── style.css              # 프로젝트 공통 스타일시트
-'''
+```
 ## 👥 팀원 (Team Members)
 
 | 역할 | 이름 | GitHub ID | 연락처/비고 |
