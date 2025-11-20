@@ -14,6 +14,33 @@
 | **Frontend** | **HTML + CSS** | 사용자에게 보여지는 화면 구조 및 스타일링을 담당합니다. (필요 시 JavaScript 추가) |
 | **Version Control** | Git / GitHub (or GitLab) | 형상 관리 및 팀 협업을 위한 도구입니다. |
 
+## 📂 프로젝트 구조 (Project Structure)
+
+본 프로젝트는 팀 규정 및 Django 초기 생성 구조에 따라, `config` 폴더가 프로젝트 설정과 메인 앱 역할을 모두 담당하는 형태로 구성되어 있습니다.
+'''
+2025-2_Web/
+├── manage.py                  # 서버 실행, 마이그레이션 등 Django 관리 명령어
+├── db.sqlite3                 # SQLite 데이터베이스 파일
+├── config/                    # 프로젝트 설정 + 메인 앱
+│   ├── __pycache__/           # Python 바이트코드 캐시 디렉토리
+│   ├── __init__.py            # Python 모듈 초기화 파일
+│   ├── settings.py            # Django 환경 설정 (DB, INSTALLED_APPS, STATIC 등)
+│   ├── urls.py                # 메인 URL 라우팅
+│   ├── views.py               # 페이지 렌더링 뷰 함수
+│   ├── asgi.py                # ASGI(비동기) 서버 설정
+│   └── wsgi.py                # WSGI(배포용) 서버 설정
+├── templates/                 # HTML 템플릿
+│   ├── base.html              # 기본 레이아웃 템플릿
+│   ├── board.html             # 게시판 페이지
+│   ├── footer.html            # 공통 footer 영역
+│   ├── gnb.html               # 네비게이션(Global Navigation Bar)
+│   ├── login.html             # 로그인 페이지
+│   ├── profile.html           # 프로필 페이지
+│   ├── ranking.html           # 랭킹 페이지
+│   └── timer.html             # 타이머 페이지
+└── static/                    # 정적 파일
+    └── style.css              # 프로젝트 공통 스타일시트
+'''
 ## 👥 팀원 (Team Members)
 
 | 역할 | 이름 | GitHub ID | 연락처/비고 |
