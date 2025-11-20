@@ -53,43 +53,23 @@
     </div>
 
     <section class="list" aria-label="스터디 그룹 목록">
-        <div class="cell name">과목명1</div>
-        <div class="cell cta">
-            <a href="{% url 'timer' group_code='GROUP1' %}">들어가기</a>
-        </div>
         
-        <div class="cell name">과목명2</div>
-        <div class="cell cta">
-            <a href="{% url 'timer' group_code='GROUP2' %}">들어가기</a>
-        </div>
-        <div class="cell name">과목명3</div>
-        <div class="cell cta">
-            <a href="{% url 'timer' group_code='GROUP3' %}">들어가기</a>
-        </div>
-        <div class="cell name">과목명4</div>
-        <div class="cell cta">
-            <a href="{% url 'timer' group_code='GROUP4' %}">들어가기</a>
-        </div>
-        <div class="cell name">과목명5</div>
-        <div class="cell cta">
-            <a href="{% url 'timer' group_code='GROUP5' %}">들어가기</a>
-        </div>
-        <div class="cell name">과목명6</div>
-        <div class="cell cta">
-            <a href="{% url 'timer' group_code='GROUP6' %}">들어가기</a>
-        </div>
-        <div class="cell name">과목명7</div>
-        <div class="cell cta">
-            <a href="{% url 'timer' group_code='GROUP7' %}">들어가기</a>
-        </div>
-        <div class="cell name">과목명8</div>
-        <div class="cell cta">
-            <a href="{% url 'timer' group_code='GROUP8' %}">들어가기</a>
-        </div>
-        <div class="cell name">과목명9</div>
-        <div class="cell cta">
-            <a href="{% url 'timer' group_code='GROUP9' %}">들어가기</a>
-        </div>
+        {% if groups %}
+            {% for group in groups %}
+            <div class="cell name">
+                [{{ group.subject }}] {{ group.name }}
+            </div>
+            <div class="cell cta">
+                <a href="{% url 'timer' group_code=group.group_code %}">들어가기</a>
+            </div>
+            {% endfor %}
+            
+        {% else %}
+            <div class="cell name" style="grid-column: 1 / -1; justify-content: center; color: gray;">
+                아직 개설된 스터디가 없습니다.
+            </div>
+        {% endif %}
+
     </section>
 
     <div class="create-wrap">

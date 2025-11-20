@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from . import views
+from webapp import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,6 +24,12 @@ urlpatterns = [
     # 2. 로그인 페이지 (http://localhost:8000/login/)
     path('login/', views.user_login, name='login'),
     
+    # 로그아웃 페이지
+    path('logout/', views.user_logout, name='logout'),
+
+    # 가입하는곳
+    path('register/', views.user_register, name='register'),
+
     # 3. 프로필 페이지 (http://localhost:8000/profile/)
     path('profile/', views.user_profile, name='profile'),
     
@@ -36,4 +42,6 @@ urlpatterns = [
     path('create/', views.create_study, name='create_study'),
     
     path('register/', views.user_register, name='register'),
+    # 스터디 참가 url 연결
+    path('study/<str:group_code>/join/', views.join_study, name='join_study'),
 ]

@@ -4,7 +4,7 @@
 {% block top_area %}
     <div class="topbar" style="max-width:1100px;margin:16px auto 0;padding:0 20px">
         <div class="btn" aria-label="뒤로">←</div>
-        <div class="room" aria-label="스터디룸 이름">{% if group_name %}{{ group_name }}{% else %}[스터디명]{% endif %}</div>
+        <div class="room" aria-label="스터디룸 이름">{{ study.name }}</div>
         <div class="btn" aria-label="홈">홈</div>
     </div> 
 {% endblock %}
@@ -57,26 +57,39 @@
         <div class="panel char">캐릭터 사진과 상태</div>
 
         <div class="panel members" aria-label="그룹원 현황">
-            <div class="row" aria-hidden="true">
-                <div class="pill">학생 1</div>
-                <div class="pill state on">ON</div>
-                <div class="timebox">02:12</div>
-                <div class="avatar"></div>
-                <div class="lvl">Lv. 5</div>
-            </div>
-            <div class="row">
-                <div class="pill">학생 4</div>
-                <div class="pill state on">ON</div>
-                <div class="timebox">01:33</div>
-                <div class="avatar"></div>
-                <div class="lvl">Lv. 4</div>
-            </div>
+            {% for member in study.members.all %}
+        <div class="row">
+        <div class="pill">{{ member.profile.nickname|default:member.username }}</div>
+        
+        <div class="pill state off">OFF</div>
+        
+        <div class="timebox">
+            {{ member.profile.total_study_time|default:"00:00" }}
         </div>
+        
+        <div class="avatar"></div>
+        
+        <div class="lvl">Lv. {{ member.profile.level }}</div>
+    </div>
+    {% endfor %}
+</div>
     </section>
 
     <aside class="panel timer" aria-label="타이머">
-        <div class="face">00:00</div>
-        <div class="cta">시작 / 퇴장</div>
+    <div class="face">00:00</div>
+    
+    <div class="cta">
+        {% if is_member %}
+            <span style="cursor:pointer">공부 시작</span>
+        {% else %}
+            <form action="{% url 'join_study' study.group_code %}" method="post">
+                {% csrf_token %}
+                <button type="submit" style="background:none; border:none; color:#93b2ff; font-weight:800; font-size:inherit; cursor:pointer;">
+                    스터디 가입하기
+                </button>
+            </form>
+        {% endif %}
+    </div>
     </aside>
 {% endblock %}
 
