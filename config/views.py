@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse
+from webapp.models import StudyGroup
+from django.shortcuts import get_object_or_404
 
 # 1. 게시판 (스터디 그룹 탐색/매칭) 페이지
 def group_list(request: HttpRequest) -> HttpResponse:
@@ -22,8 +24,21 @@ def weekly_ranking(request: HttpRequest) -> HttpResponse:
 
 # 5. 스터디룸 타이머 페이지 (실시간 Websocket 연결 필요)
 def study_timer(request: HttpRequest, group_code: str) -> HttpResponse:
-    # 그룹 코드(group_code)를 인수로 받아 해당 스터디룸을 렌더링
-    return render(request, 'timer.html', {'group_code': group_code})
+    
+    # 1. group_code로 스터디 그룹 객체를 찾거나, 없으면 404 에러를 반환
+    study = get_object_or_404(StudyGroup, group_code=group_code) 
+    
+    # 2. 현재 사용자가 그룹 멤버인지 확인 (템플릿의 is_member 조건에 사용)
+    #    (사용자가 로그인되어 있고, 해당 그룹의 멤버인지 확인하는 로직)
+    is_member = request.user.is_authenticated and study.members.filter(id=request.user.id).exists()
+
+    context = {
+        'study': study, # 📌 템플릿에 study 객체를 전달해야 {{ study.name }} 등을 사용할 수 있습니다.
+        'group_code': group_code,
+        'is_member': is_member,
+    }
+    
+    return render(request, 'timer.html', context)
 
 def create_study(request):
     """
