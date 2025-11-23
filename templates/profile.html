@@ -1,49 +1,119 @@
-{% extends 'base.html' %} 
+{% extends 'base.html' %}
+{% load static %}
 {% block title %}프로필{% endblock %}
 
 {% block header_content %}
-    <header class="head">
-      <h1 class="title">내 정보</h1>
-    </header>
+<header class="head">
+  <h1 class="title">내 정보</h1>
+</header>
 {% endblock %}
 
 {% block content %}
-  <style>
-      :root{ --bg:#0e0f13; --panel:#161821; --ink:#e9eaf3; --muted:#a4a7b8; --line:#232637; --accent:#93b2ff; --card:#1b1e2a; }
-      *{ box-sizing:border-box }
-      html,body{ height:100% }
-      body{ margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR",sans-serif; }
-      a{ color:inherit; text-decoration:none }
+<style>
+  :root{
+    --bg:#0e0f13;
+    --panel:#161821;
+    --ink:#e9eaf3;
+    --muted:#a4a7b8;
+    --line:#232637;
+    --accent:#93b2ff;
+    --card:#1b1e2a;
+  }
+  *{ box-sizing:border-box }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR",sans-serif;
+  }
+  a{ color:inherit; text-decoration:none }
 
-      /* Page head */
-      .head{ max-width:1100px; margin:32px auto 16px; padding:0 20px }
-      .title{ font-size:28px; font-weight:900; margin:0 0 10px }
-      .subtitle{ font-size:14px; color:var(--muted); margin:0 }
+  .head{
+    max-width:1100px;
+    margin:32px auto 16px;
+    padding:0 20px;
+  }
+  .title{
+    font-size:28px;
+    font-weight:900;
+    margin:0 0 10px;
+  }
 
-      /* Layout */
-      .wrap{ max-width:1100px; margin:16px auto 40px; padding:0 20px; display:grid; grid-template-columns:360px 1fr; gap:16px }
-      @media (max-width:900px){ .wrap{ grid-template-columns:1fr } }
+  .wrap{
+    max-width:1100px;
+    margin:16px auto 40px;
+    padding:0 20px;
+    display:grid;
+    grid-template-columns:360px 700px;
+    gap:16px;
+  }
+  @media (max-width:900px){
+    .wrap{ grid-template-columns:1fr; }
+  }
 
-      .panel{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px }
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+  }
 
-      /* Profile left */
-      .profile{ display:grid; gap:14px }
-      .avatar{ width:120px; height:120px; border-radius:999px; background:#2a2f47; border:1px solid var(--line) }
-      .row{ display:flex; align-items:center; gap:10px; color:var(--muted) }
-      .kv{ display:grid; grid-template-columns:120px 1fr; gap:8px; margin-top:6px }
-      .k{ color:var(--muted) }
-      .v{ font-weight:700 }
+  /* ─────────────────────────────
+      LEFT: PROFILE
+  ───────────────────────────── */
+  .profile{ display:grid; gap:14px; }
 
-      .stats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px }
-      .stat{ background:#161821; border:1px solid var(--line); border-radius:12px; padding:10px; text-align:center }
-      .stat b{ display:block; font-size:20px; margin-top:4px }
+  .avatar{
+    width:120px;
+    height:120px;
+    border-radius:999px;
+    border:1px solid var(--line);
 
-      .btns{
+    background-image: url("{% static 'img/cat1.png' %}");
+    background-size: cover;        /* 동그라미 꽉 채우기 */
+    background-position: center;   /* 가운데 정렬 */
+    background-repeat: no-repeat;  /* 반복 방지 */
+  }
+
+  .row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .kv{
+    display:grid;
+    grid-template-columns:100px 1fr;
+    gap:8px;
+    margin-top:6px;
+  }
+  .k{ color:var(--muted); }
+  .v{ font-weight:700; }
+
+  .stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:6px;
+  }
+  .stat{
+    background:#161821;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px;
+    text-align:center;
+  }
+  .stat b{
+    display:block;
+    font-size:20px;
+    margin-top:4px;
+  }
+
+  .btns{
     display:flex;
     flex-wrap:wrap;
     gap:8px;
     margin-top:8px;
-    justify-content:flex-start;
   }
   .btn{
     background:#1b1e29;
@@ -55,6 +125,7 @@
     cursor:pointer;
     flex:1 1 auto;
     min-width:110px;
+    font-size:14px;
   }
   .btn.primary{
     background:var(--accent);
@@ -62,53 +133,123 @@
     font-weight:800;
     border:none;
   }
-  </style>
 
-    <section class="panel profile" aria-label="프로필">
-      <div class="row">
-        <div class="avatar" aria-hidden="true"></div>
-        <div>
-          <div style="font-weight:900; font-size:20px;">
-            {{ user.profile.nickname|default:user.username }}
-          </div>
-          <div style="color:var(--muted)">@{{ user.username }}</div>
+  /* ─────────────────────────────
+      RIGHT: STUDY LIST
+  ───────────────────────────── */
+  .studies-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+
+  .studies-head h2{
+    margin:0;
+    font-size:18px;
+    white-space:nowrap;  /* 글씨가 세로로 늘어나는 문제 방지 */
+  }
+
+  .study-find-btn{
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#1b1e29;
+    font-size:14px;
+  }
+
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .study-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#161821;
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+  }
+
+  .study-item .left{
+    font-size:14px;
+    font-weight:600;
+  }
+
+  .study-item .enter{
+    padding:6px 12px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    font-size:13px;
+  }
+</style>
+
+<div class="wrap">
+
+  <!-- LEFT -->
+  <section class="panel profile">
+    <div class="row">
+      <div class="avatar"></div>
+      <div>
+        <div style="font-weight:900; font-size:20px;">
+          {{ user.profile.nickname|default:user.username }}
         </div>
+        <div style="color:var(--muted)">@{{ user.username }}</div>
       </div>
-      <div class="kv">
-    <div class="k">이메일</div>
-    <div class="v">{{ user.email|default:"미등록" }}</div>
+    </div>
 
-    <div class="k">레벨</div>
-    <div class="v">Lv. {{ user.profile.level }}</div>
+    <div class="kv">
+      <div class="k">이메일</div>
+      <div class="v">{{ user.email }}</div>
 
-    <div class="k">가입일</div>
-    <div class="v">{{ user.date_joined|date:"Y-m-d" }}</div>
+      <div class="k">레벨</div>
+      <div class="v">Lv. {{ user.profile.level }}</div>
+
+      <div class="k">가입일</div>
+      <div class="v">{{ user.date_joined|date:"Y-m-d" }}</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span>총 집중시간</span>
+        <b>{{ user.profile.total_study_time|default:"0시간 0분" }}</b>
+      </div>
+    </div>
+
+    <div class="btns">
+      <div class="btn">프로필 편집</div>
+      <div class="btn">비밀번호 변경</div>
+      <a href="{% url 'login' %}" class="btn primary">로그아웃</a>
+    </div>
+  </section>
+
+  <!-- RIGHT -->
+  <section class="panel">
+    <div class="studies-head">
+      <h2>가입된 스터디</h2>
+      <a href="{% url 'board' %}" class="study-find-btn">+ 새 스터디 찾기</a>
+    </div>
+
+    <div class="list">
+      <div class="study-item">
+        <div class="left">웹프로그래밍 스터디</div>
+        <a class="enter" href="{% url 'timer' group_code='GROUP1' %}">입장</a>
+      </div>
+
+      <div class="study-item">
+        <div class="left">알고리즘 스터디</div>
+        <a class="enter" href="{% url 'timer' group_code='GROUP2' %}">입장</a>
+      </div>
+
+      <div class="study-item">
+        <div class="left">컴퓨터구조 스터디</div>
+        <a class="enter" href="{% url 'timer' group_code='GROUP3' %}">입장</a>
+      </div>
+    </div>
+  </section>
 </div>
-      <div class="stats">
-        <div class="stat">
-          <span>총 집중시간</span>
-          <b>{{ user.profile.total_study_time|default:"0시간 0분" }}</b>
-        </div>
-      </div>
-      <div class="btns">
-        <div class="btn">프로필 편집</div>
-        <div class="btn">비밀번호 변경</div>
-        <a href="{% url 'login' %}" class="btn primary">로그아웃</a>
-      </div>
-    </section>
 
-    <section class="panel" aria-label="가입된 스터디">
-      <div class="studies-head">
-        <h2 style="margin:0;font-size:18px">가입된 스터디</h2>
-        <a class="btn" href="{% url 'board' %}">+ 새 스터디 찾기</a>
-      </div>
-      <div class="list">
-        <div class="cell left">웹프로그래밍 스터디</div>
-        <div class="cell right"><a href="{% url 'timer' group_code='GROUP1' %}">입장</a></div>
-        <div class="cell left">알고리즘 스터디</div>
-        <div class="cell right"><a href="{% url 'timer' group_code='GROUP2' %}">입장</a></div>
-        <div class="cell left">컴퓨터구조 스터디</div>
-        <div class="cell right"><a href="{% url 'timer' group_code='GROUP3' %}">입장</a></div>
-      </div>
-    </section>
 {% endblock %}
