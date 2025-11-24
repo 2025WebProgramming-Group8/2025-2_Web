@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 
 # 1. 사용자 프로필 (기본 User 모델 + 추가 정보)
 class UserProfile(models.Model):
@@ -9,7 +10,7 @@ class UserProfile(models.Model):
     # 추가 필드 (profile.html에 있는 정보들)
     nickname = models.CharField(max_length=20, blank=True)
     level = models.IntegerField(default=1)  # Lv. 1
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True) # 프로필 사진
+    avatar_index = models.PositiveSmallIntegerField(default=1) #프로필 사진
     total_study_time = models.DurationField(null=True, blank=True) # 총 공부 시간
     
     def __str__(self):

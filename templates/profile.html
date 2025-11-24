@@ -19,14 +19,14 @@
     --accent:#93b2ff;
     --card:#1b1e2a;
   }
-  *{ box-sizing:border-box }
+  *{ box-sizing:border-box; }
   body{
     margin:0;
     background:var(--bg);
     color:var(--ink);
     font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR",sans-serif;
   }
-  a{ color:inherit; text-decoration:none }
+  a{ color:inherit; text-decoration:none; }
 
   .head{
     max-width:1100px;
@@ -46,9 +46,6 @@
     display:grid;
     grid-template-columns:360px 700px;
     gap:16px;
-  }
-  @media (max-width:900px){
-    .wrap{ grid-template-columns:1fr; }
   }
 
   .panel{
@@ -71,7 +68,6 @@
     height:120px;
     border-radius:999px;
     border:1px solid var(--line);
-    background-image:url("{% static 'img/cat_1.png' %}");
     background-size:cover;
     background-position:center;
     background-repeat:no-repeat;
@@ -115,7 +111,6 @@
     display:flex;
     flex-wrap:wrap;
     gap:8px;
-    margin-top:8px;
   }
   .btn{
     background:#1b1e29;
@@ -143,11 +138,13 @@
     align-items:center;
     margin-bottom:14px;
   }
+
   .studies-head h2{
     margin:0;
     font-size:18px;
     white-space:nowrap;
   }
+
   .study-find-btn{
     padding:10px 14px;
     border-radius:10px;
@@ -155,11 +152,13 @@
     background:#1b1e29;
     font-size:14px;
   }
+
   .list{
     display:flex;
     flex-direction:column;
     gap:10px;
   }
+
   .study-item{
     display:flex;
     justify-content:space-between;
@@ -169,10 +168,12 @@
     border-radius:10px;
     border:1px solid var(--line);
   }
+
   .study-item .left{
     font-size:14px;
     font-weight:600;
   }
+
   .study-item .enter{
     padding:6px 12px;
     border-radius:8px;
@@ -188,9 +189,8 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    z-index:100;
+    z-index:200;
   }
-  /* hidden 클래스 붙으면 완전히 안 보이도록 */
   .avatar-modal.hidden{
     display:none !important;
   }
@@ -200,9 +200,11 @@
     border-radius:16px;
     border:1px solid var(--line);
     padding:18px 20px 16px;
-    width:min(520px, 92vw);
+    width:520px;
+    max-width:92vw;
     box-shadow:0 18px 40px rgba(0,0,0,0.45);
   }
+
   .avatar-modal-header{
     display:flex;
     justify-content:space-between;
@@ -232,10 +234,9 @@
     border-radius:50%;
     background-size:cover;
     background-position:center;
-    background-repeat:no-repeat;
     cursor:pointer;
     border:2px solid transparent;
-    transition:border-color .15s ease, transform .1s ease;
+    transition:border-color 0.15s ease, transform 0.1s ease;
   }
   .avatar-option:hover{
     border-color:var(--accent);
@@ -260,16 +261,21 @@
   }
 </style>
 
+
 <div class="wrap">
   <!-- LEFT: PROFILE -->
   <section class="panel profile">
     <div class="row">
-      <div class="avatar" id="avatar"></div>
+      <!-- 현재 저장된 아바타 인덱스를 data-current-index에 넣어줌 -->
+      <div class="avatar"
+           id="avatar"
+           data-current-index="{{ user.profile.avatar_index|default:1 }}"></div>
+
       <div>
         <div style="font-weight:900; font-size:20px;">
           {{ user.profile.nickname|default:user.username }}
         </div>
-        <div style="color:var(--muted)">@{{ user.username }}</div>
+        <div style="color:var(--muted);">@{{ user.username }}</div>
       </div>
     </div>
 
@@ -298,6 +304,7 @@
     </div>
   </section>
 
+
   <!-- RIGHT: STUDY LIST -->
   <section class="panel">
     <div class="studies-head">
@@ -322,83 +329,149 @@
   </section>
 </div>
 
+
 <!-- 🔵 아바타 선택 모달 -->
 <div id="avatar-modal" class="avatar-modal hidden">
   <div class="avatar-modal-content">
+
     <div class="avatar-modal-header">
       <div class="avatar-modal-title">프로필 사진 선택</div>
       <div class="avatar-modal-close" id="avatar-modal-close">&times;</div>
     </div>
 
     <div class="avatar-picker-grid">
-      <div class="avatar-option selected" data-img="{% static 'img/cat_1.png' %}"></div>
-      <div class="avatar-option" data-img="{% static 'img/cat_2.png' %}"></div>
-      <div class="avatar-option" data-img="{% static 'img/cat_3.png' %}"></div>
-      <div class="avatar-option" data-img="{% static 'img/cat_4.png' %}"></div>
-      <div class="avatar-option" data-img="{% static 'img/cat_5.png' %}"></div>
-      <div class="avatar-option" data-img="{% static 'img/cat_6.png' %}"></div>
-      <div class="avatar-option" data-img="{% static 'img/cat_7.png' %}"></div>
-      <div class="avatar-option" data-img="{% static 'img/cat_8.png' %}"></div>
-      <div class="avatar-option" data-img="{% static 'img/cat_9.png' %}"></div>
-      <div class="avatar-option" data-img="{% static 'img/cat_10.png' %}"></div>
+      <div class="avatar-option" data-index="1"></div>
+      <div class="avatar-option" data-index="2"></div>
+      <div class="avatar-option" data-index="3"></div>
+      <div class="avatar-option" data-index="4"></div>
+      <div class="avatar-option" data-index="5"></div>
+      <div class="avatar-option" data-index="6"></div>
+      <div class="avatar-option" data-index="7"></div>
+      <div class="avatar-option" data-index="8"></div>
+      <div class="avatar-option" data-index="9"></div>
+      <div class="avatar-option" data-index="10"></div>
     </div>
 
     <div class="avatar-modal-footer">
       <button id="avatar-confirm-btn" class="avatar-confirm-btn">확인</button>
     </div>
+
   </div>
 </div>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const modal      = document.getElementById('avatar-modal');
-  const editBtn    = document.getElementById('edit-profile-btn');
-  const closeBtn   = document.getElementById('avatar-modal-close');
-  const confirmBtn = document.getElementById('avatar-confirm-btn');
-  const avatar     = document.getElementById('avatar');
-  const options    = document.querySelectorAll('.avatar-option');
 
-  let pendingAvatarUrl = null;
+  const avatarDiv = document.getElementById("avatar");
+  const modal = document.getElementById("avatar-modal");
+  const editBtn = document.getElementById("edit-profile-btn");
+  const closeBtn = document.getElementById("avatar-modal-close");
+  const confirmBtn = document.getElementById("avatar-confirm-btn");
 
-  // 각 옵션에 실제 배경 이미지 적용
-  options.forEach(opt => {
-    const url = opt.dataset.img;
-    opt.style.backgroundImage = "url('" + url + "')";
+  const options = document.querySelectorAll(".avatar-option");
+
+  // static 경로 prefix (예: /static/img/)
+  const staticBase = "{% static 'img' %}/";
+
+  // 현재 저장된 인덱스 (없으면 1)
+  let selectedIndex = parseInt(avatarDiv.dataset.currentIndex || "1", 10);
+  let pendingIndex = selectedIndex;
+
+  // 프로필 이미지 적용 함수
+  function applyAvatar(index) {
+    avatarDiv.style.backgroundImage = "url('" + staticBase + "cat_" + index + ".png')";
+  }
+
+  // 선택 UI 업데이트
+  function updateSelectionUI() {
+    options.forEach(function (opt) {
+      opt.classList.remove("selected");
+      if (parseInt(opt.dataset.index, 10) === pendingIndex) {
+        opt.classList.add("selected");
+      }
+    });
+  }
+
+  // 초기 상태 반영
+  applyAvatar(selectedIndex);
+  updateSelectionUI();
+
+  // 각 옵션에 이미지 배경 적용
+  options.forEach(function (opt) {
+    const n = opt.dataset.index;
+    opt.style.backgroundImage = "url('" + staticBase + "cat_" + n + ".png')";
   });
 
   // 모달 열기
-  editBtn.addEventListener('click', () => {
-    modal.classList.remove('hidden');
-    pendingAvatarUrl = null;
+  editBtn.addEventListener("click", function () {
+    modal.classList.remove("hidden");
   });
 
-  // X 버튼으로 닫기
-  closeBtn.addEventListener('click', () => {
-    modal.classList.add('hidden');
+  // 닫기(X)
+  closeBtn.addEventListener("click", function () {
+    modal.classList.add("hidden");
   });
 
-  // 배경 클릭 시 닫기
-  modal.addEventListener('click', (e) => {
+  // 바깥 클릭 시 닫기
+  modal.addEventListener("click", function (e) {
     if (e.target === modal) {
-      modal.classList.add('hidden');
+      modal.classList.add("hidden");
     }
   });
 
-  // 아바타 하나 선택
-  options.forEach(opt => {
-    opt.addEventListener('click', () => {
-      options.forEach(o => o.classList.remove('selected'));
-      opt.classList.add('selected');
-      pendingAvatarUrl = opt.dataset.img;
+  // 옵션 클릭
+  options.forEach(function (opt) {
+    opt.addEventListener("click", function () {
+      pendingIndex = parseInt(opt.dataset.index, 10);
+      updateSelectionUI();
     });
   });
 
-  // 확인 버튼 -> 적용 + 모달 닫기
-  confirmBtn.addEventListener('click', () => {
-    if (pendingAvatarUrl) {
-      avatar.style.backgroundImage = "url('" + pendingAvatarUrl + "')";
+  // CSRF 토큰 가져오기
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
     }
-    modal.classList.add('hidden');
+    return cookieValue;
+  }
+
+  const csrftoken = getCookie('csrftoken');
+
+  // 확인 → UI 반영 + 서버 저장
+  confirmBtn.addEventListener("click", function () {
+
+    // 프론트에서 즉시 반영
+    applyAvatar(pendingIndex);
+    selectedIndex = pendingIndex;
+
+    // 서버에 저장 요청
+    fetch("/profile/update-avatar/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken
+      },
+      body: JSON.stringify({
+        avatar_index: pendingIndex
+      })
+    }).then(function (res) {
+      return res.json();
+    }).then(function (data) {
+      console.log("Saved:", data);
+    }).catch(function (err) {
+      console.error("avatar update error", err);
+    });
+
+    modal.classList.add("hidden");
   });
 });
 </script>

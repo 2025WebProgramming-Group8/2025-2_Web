@@ -7,6 +7,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
 from .forms import RegisterForm
 from .models import UserProfile, StudyGroup
+import json
 
 
 # 1. 게시판 (스터디 그룹 탐색/매칭) 페이지
@@ -54,6 +55,19 @@ def user_register(request):
 # 3. 사용자 프로필 및 고양이 관리 페이지
 def user_profile(request: HttpRequest) -> HttpResponse:
     # 사용자 데이터(닉네임, 고양이 레벨 등)를 템플릿에 전달할 수 있음
+    profile, _ = UserProfile.objects.get_or_create(
+        user=request.user,
+        defaults={"nickname": request.user.username, "level": 1},
+    )
+
+    # avatar_index 필드가 있다고 가정 (없으면 기본값 1)
+    avatar_index = getattr(profile, "avatar_index", 1)
+
+    context = {
+        "profile": profile,
+        "avatar_index": avatar_index,
+    }
+
     return render(request, 'profile.html', {})
 
 # 4. 랭킹 페이지 (주간/월간 경쟁 순위)
@@ -126,3 +140,21 @@ def join_study(request, group_code):
         
     # 3. 다시 타이머 페이지로 돌아갑니다 (이제 멤버로 인식됨)
     return redirect('timer', group_code=group_code)
+
+#프로필 이미지 저장
+@login_required
+def update_avatar(request):
+    profile = request.user.profile
+
+    try:
+        data = json.loads(request.body)
+        avatar_index = int(data.get("avatar_index"))
+    except Exception:
+        return HttpResponseBadRequest("Invalid data")
+
+    if 1 <= avatar_index <= 10:
+        profile.avatar_index = avatar_index
+        profile.save()
+        return JsonResponse({"status": "ok"})
+    else:
+        return HttpResponseBadRequest("Avatar index out of range")
