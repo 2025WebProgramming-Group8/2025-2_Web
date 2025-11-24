@@ -56,23 +56,25 @@
     border:1px solid var(--line);
     border-radius:14px;
     padding:18px;
+    min-height:630px;
   }
 
-  /* ─────────────────────────────
-      LEFT: PROFILE
-  ───────────────────────────── */
-  .profile{ display:grid; gap:14px; }
+  /* LEFT: PROFILE */
+  .profile{
+    display:grid;
+    gap:14px;
+    position:relative;
+  }
 
   .avatar{
     width:120px;
     height:120px;
     border-radius:999px;
     border:1px solid var(--line);
-
-    background-image: url("{% static 'img/cat1.png' %}");
-    background-size: cover;        /* 동그라미 꽉 채우기 */
-    background-position: center;   /* 가운데 정렬 */
-    background-repeat: no-repeat;  /* 반복 방지 */
+    background-image:url("{% static 'img/cat_1.png' %}");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
   }
 
   .row{
@@ -134,22 +136,18 @@
     border:none;
   }
 
-  /* ─────────────────────────────
-      RIGHT: STUDY LIST
-  ───────────────────────────── */
+  /* RIGHT: STUDY LIST */
   .studies-head{
     display:flex;
     justify-content:space-between;
     align-items:center;
     margin-bottom:14px;
   }
-
   .studies-head h2{
     margin:0;
     font-size:18px;
-    white-space:nowrap;  /* 글씨가 세로로 늘어나는 문제 방지 */
+    white-space:nowrap;
   }
-
   .study-find-btn{
     padding:10px 14px;
     border-radius:10px;
@@ -157,13 +155,11 @@
     background:#1b1e29;
     font-size:14px;
   }
-
   .list{
     display:flex;
     flex-direction:column;
     gap:10px;
   }
-
   .study-item{
     display:flex;
     justify-content:space-between;
@@ -173,26 +169,102 @@
     border-radius:10px;
     border:1px solid var(--line);
   }
-
   .study-item .left{
     font-size:14px;
     font-weight:600;
   }
-
   .study-item .enter{
     padding:6px 12px;
     border-radius:8px;
     border:1px solid var(--line);
     font-size:13px;
   }
+
+  /* ---------- MODAL POPUP ---------- */
+  .avatar-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+  }
+  /* hidden 클래스 붙으면 완전히 안 보이도록 */
+  .avatar-modal.hidden{
+    display:none !important;
+  }
+
+  .avatar-modal-content{
+    background:#161821;
+    border-radius:16px;
+    border:1px solid var(--line);
+    padding:18px 20px 16px;
+    width:min(520px, 92vw);
+    box-shadow:0 18px 40px rgba(0,0,0,0.45);
+  }
+  .avatar-modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .avatar-modal-title{
+    font-size:16px;
+    font-weight:700;
+  }
+  .avatar-modal-close{
+    cursor:pointer;
+    font-size:22px;
+    color:var(--muted);
+  }
+
+  .avatar-picker-grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:10px;
+    margin:8px 0 14px;
+  }
+
+  .avatar-option{
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    cursor:pointer;
+    border:2px solid transparent;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .avatar-option:hover{
+    border-color:var(--accent);
+    transform:translateY(-2px);
+  }
+  .avatar-option.selected{
+    border-color:var(--accent);
+  }
+
+  .avatar-modal-footer{
+    display:flex;
+    justify-content:flex-end;
+  }
+  .avatar-confirm-btn{
+    padding:10px 18px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    background:var(--accent);
+    color:#0b0c12;
+    font-weight:700;
+  }
 </style>
 
 <div class="wrap">
-
-  <!-- LEFT -->
+  <!-- LEFT: PROFILE -->
   <section class="panel profile">
     <div class="row">
-      <div class="avatar"></div>
+      <div class="avatar" id="avatar"></div>
       <div>
         <div style="font-weight:900; font-size:20px;">
           {{ user.profile.nickname|default:user.username }}
@@ -220,13 +292,13 @@
     </div>
 
     <div class="btns">
-      <div class="btn">프로필 편집</div>
+      <button class="btn" id="edit-profile-btn">프로필 편집</button>
       <div class="btn">비밀번호 변경</div>
       <a href="{% url 'login' %}" class="btn primary">로그아웃</a>
     </div>
   </section>
 
-  <!-- RIGHT -->
+  <!-- RIGHT: STUDY LIST -->
   <section class="panel">
     <div class="studies-head">
       <h2>가입된 스터디</h2>
@@ -238,12 +310,10 @@
         <div class="left">웹프로그래밍 스터디</div>
         <a class="enter" href="{% url 'timer' group_code='GROUP1' %}">입장</a>
       </div>
-
       <div class="study-item">
         <div class="left">알고리즘 스터디</div>
         <a class="enter" href="{% url 'timer' group_code='GROUP2' %}">입장</a>
       </div>
-
       <div class="study-item">
         <div class="left">컴퓨터구조 스터디</div>
         <a class="enter" href="{% url 'timer' group_code='GROUP3' %}">입장</a>
@@ -251,5 +321,86 @@
     </div>
   </section>
 </div>
+
+<!-- 🔵 아바타 선택 모달 -->
+<div id="avatar-modal" class="avatar-modal hidden">
+  <div class="avatar-modal-content">
+    <div class="avatar-modal-header">
+      <div class="avatar-modal-title">프로필 사진 선택</div>
+      <div class="avatar-modal-close" id="avatar-modal-close">&times;</div>
+    </div>
+
+    <div class="avatar-picker-grid">
+      <div class="avatar-option selected" data-img="{% static 'img/cat_1.png' %}"></div>
+      <div class="avatar-option" data-img="{% static 'img/cat_2.png' %}"></div>
+      <div class="avatar-option" data-img="{% static 'img/cat_3.png' %}"></div>
+      <div class="avatar-option" data-img="{% static 'img/cat_4.png' %}"></div>
+      <div class="avatar-option" data-img="{% static 'img/cat_5.png' %}"></div>
+      <div class="avatar-option" data-img="{% static 'img/cat_6.png' %}"></div>
+      <div class="avatar-option" data-img="{% static 'img/cat_7.png' %}"></div>
+      <div class="avatar-option" data-img="{% static 'img/cat_8.png' %}"></div>
+      <div class="avatar-option" data-img="{% static 'img/cat_9.png' %}"></div>
+      <div class="avatar-option" data-img="{% static 'img/cat_10.png' %}"></div>
+    </div>
+
+    <div class="avatar-modal-footer">
+      <button id="avatar-confirm-btn" class="avatar-confirm-btn">확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const modal      = document.getElementById('avatar-modal');
+  const editBtn    = document.getElementById('edit-profile-btn');
+  const closeBtn   = document.getElementById('avatar-modal-close');
+  const confirmBtn = document.getElementById('avatar-confirm-btn');
+  const avatar     = document.getElementById('avatar');
+  const options    = document.querySelectorAll('.avatar-option');
+
+  let pendingAvatarUrl = null;
+
+  // 각 옵션에 실제 배경 이미지 적용
+  options.forEach(opt => {
+    const url = opt.dataset.img;
+    opt.style.backgroundImage = "url('" + url + "')";
+  });
+
+  // 모달 열기
+  editBtn.addEventListener('click', () => {
+    modal.classList.remove('hidden');
+    pendingAvatarUrl = null;
+  });
+
+  // X 버튼으로 닫기
+  closeBtn.addEventListener('click', () => {
+    modal.classList.add('hidden');
+  });
+
+  // 배경 클릭 시 닫기
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.add('hidden');
+    }
+  });
+
+  // 아바타 하나 선택
+  options.forEach(opt => {
+    opt.addEventListener('click', () => {
+      options.forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      pendingAvatarUrl = opt.dataset.img;
+    });
+  });
+
+  // 확인 버튼 -> 적용 + 모달 닫기
+  confirmBtn.addEventListener('click', () => {
+    if (pendingAvatarUrl) {
+      avatar.style.backgroundImage = "url('" + pendingAvatarUrl + "')";
+    }
+    modal.classList.add('hidden');
+  });
+});
+</script>
 
 {% endblock %}
