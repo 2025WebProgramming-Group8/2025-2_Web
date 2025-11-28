@@ -120,6 +120,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# 정적 파일을 모을 최종 디렉토리 (Nginx가 접근할 위치)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # 프로젝트 루트 디렉토리에 있는 'static' 폴더의 경로를 추가
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
