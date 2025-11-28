@@ -57,26 +57,24 @@
         <div class="panel char">캐릭터 사진과 상태</div>
 
         <div class="panel members" aria-label="그룹원 현황">
-            {% for member in study.members.all %}
-        <div class="row" data-user-id="{{ member.id }}">
-        <div class="pill">{{ member.profile.nickname|default:member.username }}</div>
-        
-        <div class="pill state off">OFF</div>
-        
-        <div class="timebox">
-            {{ member.profile.total_study_time|default:"00:00" }}
+            {% for member_link in groups %} 
+            <div class="row" data-user-id="{{ member_link.user.id }}">
+                <div class="pill">{{ member_link.user.profile.nickname|default:member_link.user.username }}</div>
+                <div class="pill state off">OFF</div>
+                
+                <div class="timebox">
+                    {{ member_link.group_study_time|default:"0:00:00" }}
+                </div>
+                
+                <div class="avatar"></div>
+                <div class="lvl">Lv. {{ member_link.user.profile.level }}</div>
+            </div>
+            {% endfor %}
         </div>
-        
-        <div class="avatar"></div>
-        
-        <div class="lvl">Lv. {{ member.profile.level }}</div>
-    </div>
-    {% endfor %}
-</div>
     </section>
 
     <aside class="panel timer" aria-label="타이머">
-    <div class="face">00:00</div>
+    <div class="face">0:00:00</div>
     
     <div class="cta">
         {% if is_member %}
@@ -89,7 +87,7 @@
                 </button>
             </form>
         {% endif %}
-    </div>
+        </div>
     </aside>
 
 <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script> 
@@ -98,34 +96,40 @@
     const socket = io('http://127.0.0.1:3000'); 
 
     // 2. 현재 사용자 및 스터디 정보 (Django 템플릿 변수 사용)
-    const myUserId = "{{ request.user.id }}";
-    const studyRoomId = "{{ study.id }}"; // 1단계에서 study 객체를 전달했으므로 사용 가능
+    const myUserId = String("{{ request.user.id }}");
+    const studyRoomId = "{{ study.id }}";
     
     // 3. HTML 요소 접근
     const timerFace = document.querySelector('.timer .face');
-    const ctaButtonSpan = document.querySelector('.timer .cta span');
+    const ctaButtonContainer = document.querySelector('.timer .cta');
+    const ctaButtonSpan = ctaButtonContainer ? ctaButtonContainer.querySelector('span') : null;
     const memberRowsContainer = document.querySelector('.members');
 
     // 4. 타이머 상태 변수
+    const initialTimeString = "{{ initial_time|default:'0' }}"; 
+    let parsedTime = parseInt(initialTimeString, 10);
+    let initialTimeFromDB = isNaN(parsedTime) ? 0 : parsedTime;
+    let myCurrentTime = initialTimeFromDB; // DB에서 가져온 시간부터 시작
     let timerInterval = null; 
     let isStudying = false;
-    let myCurrentTime = 0; // 초 단위로 누적된 공부 시간 (DB에서 불러온 초기값으로 설정 필요)
 
     function formatTime(seconds) {
-        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const h = String(Math.floor(seconds / 3600)); 
+        const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
         const s = String(seconds % 60).padStart(2, '0');
-        return `${m}:${s}`; 
+        return `${h}:${m}:${s}`;
     }
+
+    // 페이지 로드 시 타이머 UI를 DB 시간으로 초기화합니다.
+    timerFace.textContent = formatTime(myCurrentTime);
 
     // 로컬 타이머 시작/정지 로직 (Socket.IO 통신 추가)
     function startMyTimer() {
         if (isStudying) return; // 이미 시작된 경우 무시
-
         isStudying = true;
         ctaButtonSpan.textContent = "공부 중지";
-        ctaButtonSpan.parentElement.classList.add('cta-studying'); // CSS 클래스로 스타일 변경
-
-        // 📌 서버에 'start' 이벤트 전송
+        ctaButtonSpan.parentElement.classList.add('cta-studying');
+        // 서버에 'start' 이벤트 전송
         socket.emit('timer_action', { 
             room: studyRoomId, 
             userId: myUserId, 
@@ -137,36 +141,34 @@
         timerInterval = setInterval(() => {
             myCurrentTime++;
             timerFace.textContent = formatTime(myCurrentTime);
-            
-            // 1분(60초)마다 서버에 현재 시간 업데이트 (잦은 통신 방지)
-            if (myCurrentTime % 60 === 0) {
-                 // 📌 1분마다 서버에 현재 시간 업데이트를 알림 (선택 사항)
-                 // socket.emit('update_timer', { room: studyRoomId, userId: myUserId, currentTime: myCurrentTime });
-            }
-        }, 1000); 
+        }, 1000);
     }
 
     function stopMyTimer() {
         if (!isStudying) return;
 
-        isStudying = false;
-        clearInterval(timerInterval);
-        timerInterval = null;
-        ctaButtonSpan.textContent = "공부 시작";
-        ctaButtonSpan.parentElement.classList.remove('cta-studying');
-
-        // 📌 서버에 'stop' 이벤트 전송
+        // 서버에 'stop' 이벤트 전송
         socket.emit('timer_action', { 
             room: studyRoomId, 
             userId: myUserId, 
             action: 'stop',
             currentTime: myCurrentTime // 최종 누적 시간도 함께 보냄
         });
+         clearInterval(timerInterval);
+        timerInterval = null;
+        isStudying = false;
+
+        ctaButtonSpan.textContent = "공부 시작";
+        ctaButtonSpan.parentElement.classList.remove('cta-studying');
+
+        console.log("STOP 이벤트 즉시 전송 완료. DB 저장 요청됨.");
+
+        window.location.reload();
     }
 
     // 5. 버튼 클릭 이벤트 연결
-    if (ctaButtonSpan) {
-        ctaButtonSpan.addEventListener('click', () => {
+    if (ctaButtonContainer && ctaButtonSpan) {
+        ctaButtonContainer.addEventListener('click', () => {
             if (!isStudying) {
                 startMyTimer();
             } else {
@@ -178,45 +180,76 @@
     // 6. 소켓 연결 시 스터디룸 입장 이벤트 전송
     socket.on('connect', () => {
         console.log('Socket.IO 서버 연결됨');
-        if (studyRoomId) {
-            socket.emit('join_room', studyRoomId); // 룸에 입장하여 해당 그룹 데이터만 받도록 요청
-        }
+        if (studyRoomId && myUserId && myUserId !== 'None' && myUserId !== '') { 
+            socket.emit('join_room', { roomId: studyRoomId, userId: myUserId });
+    }
     });
 
     // 7. 서버로부터 실시간 상태 업데이트 수신
     socket.on('status_update', (allUsersStatus) => {
-        // allUsersStatus: { userId: { time: N, isStudying: true }, ... }
+    
+        const myUserIdString = String(myUserId);
+        // myStatus는 루프 내부에서만 사용해도 되지만, 여기서는 전체 상태 파악을 위해 남겨둠.
+        const myStatus = allUsersStatus[myUserIdString]; 
 
-        // 현재 페이지의 모든 멤버 행을 순회하며 상태를 업데이트
+        // 다른 멤버 UI 업데이트
         memberRowsContainer.querySelectorAll('.row').forEach(row => {
-            const memberId = row.dataset.userId; 
+            const memberId = String(row.dataset.userId); 
             const status = allUsersStatus[memberId];
             
-            if (!status) return; // 해당 멤버의 상태 정보가 없으면 건너뜀
+            // 데이터가 없으면 (다른 방 멤버) 업데이트 중단
+            if (!status) return; 
 
             const statusPill = row.querySelector('.state');
             const timeBox = row.querySelector('.timebox');
             
-            timeBox.textContent = formatTime(status.time); // 실시간 시간 업데이트
+            // NaN 방지 및 시간 값 변환 (핵심)
+            const currentStatusTime = parseInt(status.time, 10);
+            if (isNaN(currentStatusTime)) return; // 숫자가 아니면 렌더링 중단
+
+            // 시간 UI 업데이트 (모든 멤버)
+            timeBox.textContent = formatTime(currentStatusTime);
 
             if (status.isStudying) {
+                // ON 상태 업데이트 (모든 멤버에게 적용)
                 statusPill.textContent = "ON";
-                statusPill.className = "pill state on";
+                statusPill.classList.remove('off', 'rest'); 
+                statusPill.classList.add('on'); 
                 
-                // 만약 업데이트된 사용자가 '나' 자신이라면 로컬 상태 동기화
-                if (memberId === myUserId && !isStudying) {
-                    myCurrentTime = status.time;
-                    timerFace.textContent = formatTime(myCurrentTime);
-                    // (페이지를 새로고침했으나 다른 사람이 내가 공부 중인 것을 보고 있을 때 상태 복구 로직)
+                if (memberId === myUserIdString) {
+                    // 본인 상태 동기화 (로컬 변수 및 메인 타이머)
+                    isStudying = true;
+                    if (currentStatusTime >= myCurrentTime) {
+                        myCurrentTime = currentStatusTime; 
+                        timerFace.textContent = formatTime(myCurrentTime);
+                    }
                 }
-
             } else {
+                // OFF 상태 업데이트 (모든 멤버에게 적용)
                 statusPill.textContent = "OFF";
-                statusPill.className = "pill state off";
+                statusPill.classList.remove('on', 'rest');
+                statusPill.classList.add('off');
+                
+                if (memberId === myUserIdString) {
+                    // 본인 상태 동기화
+                    isStudying = false;
+                    myCurrentTime = currentStatusTime;
+                    timerFace.textContent = formatTime(myCurrentTime);
+                }
             }
-        });
     });
 
+    // 내 로컬 타이머 제어 (오직 myStatus만 사용)
+    if (myStatus) {
+        // 서버 시간이 내 로컬 시간보다 크거나 같을 때만 동기화하여 시간 역행 방지
+        if (myStatus.time >= myCurrentTime) {
+            myCurrentTime = myStatus.time; 
+            timerFace.textContent = formatTime(myCurrentTime);
+        }
+        
+        // myStatus.isStudying에 따라 로컬 UI와 상태를 최종적으로 확인 (선택 사항)
+    }
+});
 </script>
 {% endblock %}
 

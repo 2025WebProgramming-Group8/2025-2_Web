@@ -44,4 +44,6 @@ urlpatterns = [
     path('register/', views.user_register, name='register'),
     # 스터디 참가 url 연결
     path('study/<str:group_code>/join/', views.join_study, name='join_study'),
+    # API 경로 추가
+    path('api/save-time/', views.save_study_time, name='save_study_time'),
 ]
