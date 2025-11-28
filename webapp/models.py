@@ -21,7 +21,7 @@ class UserProfile(models.Model):
 class StudyGroup(models.Model):
     name = models.CharField(max_length=100)  # 스터디 이름
     subject = models.CharField(max_length=50) # 과목명 (예: 웹프로그래밍)
-    group_code = models.CharField(max_length=20, unique=True) # 그룹 코드 (URL에 사용: /study/A1B2C/)
+    group_code = models.CharField(max_length=20, unique=True, blank=True) # 그룹 코드 (URL에 사용: /study/A1B2C/)
     description = models.TextField(blank=True) # 소개글
     created_at = models.DateTimeField(auto_now_add=True) # 생성일
     # ManyToMany 필드를 StudyGroupMember를 통해 관리하도록 명시
