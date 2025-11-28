@@ -313,18 +313,23 @@
     </div>
 
     <div class="list">
+      {% for membership in memberships %}
       <div class="study-item">
-        <div class="left">웹프로그래밍 스터디</div>
-        <a class="enter" href="{% url 'timer' group_code='GROUP1' %}">입장</a>
+          <div class="left">
+              {{ membership.study_group.name }}
+              
+              <span style="font-size: 13px; color: var(--muted); margin-left: 10px;">
+                  ({{ membership.group_study_time|default:"0분 0초" }})
+              </span>
+          </div>
+          
+          <a class="enter" href="{% url 'timer' group_code=membership.study_group.group_code %}">입장</a>
       </div>
-      <div class="study-item">
-        <div class="left">알고리즘 스터디</div>
-        <a class="enter" href="{% url 'timer' group_code='GROUP2' %}">입장</a>
+      {% empty %}
+      <div class="study-item" style="justify-content: center; color: var(--muted);">
+          아직 가입된 스터디가 없습니다.
       </div>
-      <div class="study-item">
-        <div class="left">컴퓨터구조 스터디</div>
-        <a class="enter" href="{% url 'timer' group_code='GROUP3' %}">입장</a>
-      </div>
+      {% endfor %}
     </div>
   </section>
 </div>

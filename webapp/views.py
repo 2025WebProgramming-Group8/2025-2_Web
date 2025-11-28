@@ -108,6 +108,11 @@ def user_profile(request: HttpRequest) -> HttpResponse:
         else:
             total_time_display = "0분 0초" # 총 시간이 없을 때 기본값
     
+    user_study_memberships = StudyGroupMember.objects.filter(user=request.user).select_related(
+        'study_group', 
+        'user__profile' # UserProfile 정보를 가져오기 위함
+    )
+    
     # avatar_index 필드가 있다고 가정 (없으면 기본값 1)
     avatar_index = getattr(profile, "avatar_index", 1)
 
@@ -115,6 +120,7 @@ def user_profile(request: HttpRequest) -> HttpResponse:
         "profile": profile,
         "avatar_index": avatar_index,
         "total_study_time_sum": total_time_display,
+        "memberships": user_study_memberships,
     }
 
     return render(request, 'profile.html', context)
