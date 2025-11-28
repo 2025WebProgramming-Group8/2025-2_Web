@@ -1,0 +1,484 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}프로필{% endblock %}
+
+{% block header_content %}
+<header class="head">
+  <h1 class="title">내 정보</h1>
+</header>
+{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+    --bg:#0e0f13;
+    --panel:#161821;
+    --ink:#e9eaf3;
+    --muted:#a4a7b8;
+    --line:#232637;
+    --accent:#93b2ff;
+    --card:#1b1e2a;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR",sans-serif;
+  }
+  a{ color:inherit; text-decoration:none; }
+
+  .head{
+    max-width:1100px;
+    margin:32px auto 16px;
+    padding:0 20px;
+  }
+  .title{
+    font-size:28px;
+    font-weight:900;
+    margin:0 0 10px;
+  }
+
+  .wrap{
+    max-width:1100px;
+    margin:16px auto 40px;
+    padding:0 20px;
+    display:grid;
+    grid-template-columns:360px 700px;
+    gap:16px;
+  }
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+    min-height:630px;
+  }
+
+  /* LEFT: PROFILE */
+  .profile{
+    display:grid;
+    gap:14px;
+    position:relative;
+  }
+
+  .avatar{
+    width:120px;
+    height:120px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+  }
+
+  .row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .kv{
+    display:grid;
+    grid-template-columns:100px 1fr;
+    gap:8px;
+    margin-top:6px;
+  }
+  .k{ color:var(--muted); }
+  .v{ font-weight:700; }
+
+  .stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:6px;
+  }
+  .stat{
+    background:#161821;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px;
+    text-align:center;
+  }
+  .stat b{
+    display:block;
+    font-size:20px;
+    margin-top:4px;
+  }
+
+  .btns{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .btn{
+    background:#1b1e29;
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:10px;
+    padding:10px 14px;
+    text-align:center;
+    cursor:pointer;
+    flex:1 1 auto;
+    min-width:110px;
+    font-size:14px;
+  }
+  .btn.primary{
+    background:var(--accent);
+    color:#0b0c12;
+    font-weight:800;
+    border:none;
+  }
+
+  /* RIGHT: STUDY LIST */
+  .studies-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+
+  .studies-head h2{
+    margin:0;
+    font-size:18px;
+    white-space:nowrap;
+  }
+
+  .study-find-btn{
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#1b1e29;
+    font-size:14px;
+  }
+
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .study-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#161821;
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+  }
+
+  .study-item .left{
+    font-size:14px;
+    font-weight:600;
+  }
+
+  .study-item .enter{
+    padding:6px 12px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    font-size:13px;
+  }
+
+  /* ---------- MODAL POPUP ---------- */
+  .avatar-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:200;
+  }
+  .avatar-modal.hidden{
+    display:none !important;
+  }
+
+  .avatar-modal-content{
+    background:#161821;
+    border-radius:16px;
+    border:1px solid var(--line);
+    padding:18px 20px 16px;
+    width:520px;
+    max-width:92vw;
+    box-shadow:0 18px 40px rgba(0,0,0,0.45);
+  }
+
+  .avatar-modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .avatar-modal-title{
+    font-size:16px;
+    font-weight:700;
+  }
+  .avatar-modal-close{
+    cursor:pointer;
+    font-size:22px;
+    color:var(--muted);
+  }
+
+  .avatar-picker-grid{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:10px;
+    margin:8px 0 14px;
+  }
+
+  .avatar-option{
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    background-size:cover;
+    background-position:center;
+    cursor:pointer;
+    border:2px solid transparent;
+    transition:border-color 0.15s ease, transform 0.1s ease;
+  }
+  .avatar-option:hover{
+    border-color:var(--accent);
+    transform:translateY(-2px);
+  }
+  .avatar-option.selected{
+    border-color:var(--accent);
+  }
+
+  .avatar-modal-footer{
+    display:flex;
+    justify-content:flex-end;
+  }
+  .avatar-confirm-btn{
+    padding:10px 18px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    background:var(--accent);
+    color:#0b0c12;
+    font-weight:700;
+  }
+</style>
+
+
+<div class="wrap">
+  <!-- LEFT: PROFILE -->
+  <section class="panel profile">
+    <div class="row">
+      <!-- 현재 저장된 아바타 인덱스를 data-current-index에 넣어줌 -->
+      <div class="avatar"
+           id="avatar"
+           data-current-index="{{ user.profile.avatar_index|default:1 }}"></div>
+
+      <div>
+        <div style="font-weight:900; font-size:20px;">
+          {{ user.profile.nickname|default:user.username }}
+        </div>
+        <div style="color:var(--muted);">@{{ user.username }}</div>
+      </div>
+    </div>
+
+    <div class="kv">
+      <div class="k">이메일</div>
+      <div class="v">{{ user.email }}</div>
+
+      <div class="k">레벨</div>
+      <div class="v">Lv. {{ user.profile.level }}</div>
+
+      <div class="k">가입일</div>
+      <div class="v">{{ user.date_joined|date:"Y-m-d" }}</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span>총 집중시간</span>
+        <b>{{ total_study_time_sum }}</b>
+      </div>
+    </div>
+
+    <div class="btns">
+    <button class="btn" id="edit-profile-btn">프로필 편집</button>
+    <a href="{% url 'change_password' %}" class="btn">비밀번호 변경</a> 
+    <a href="{% url 'logout' %}" class="btn primary">로그아웃</a>
+</div>
+  </section>
+
+
+  <!-- RIGHT: STUDY LIST -->
+  <section class="panel">
+    <div class="studies-head">
+      <h2>가입된 스터디</h2>
+      <a href="{% url 'board' %}" class="study-find-btn">+ 새 스터디 찾기</a>
+    </div>
+
+    <div class="list">
+      {% for membership in memberships %}
+      <div class="study-item">
+          <div class="left">
+              {{ membership.study_group.name }}
+              
+              <span style="font-size: 13px; color: var(--muted); margin-left: 10px;">
+                  ({{ membership.group_study_time|default:"0분 0초" }})
+              </span>
+          </div>
+          
+          <a class="enter" href="{% url 'timer' group_code=membership.study_group.group_code %}">입장</a>
+      </div>
+      {% empty %}
+      <div class="study-item" style="justify-content: center; color: var(--muted);">
+          아직 가입된 스터디가 없습니다.
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+
+<!-- 🔵 아바타 선택 모달 -->
+<div id="avatar-modal" class="avatar-modal hidden">
+  <div class="avatar-modal-content">
+
+    <div class="avatar-modal-header">
+      <div class="avatar-modal-title">프로필 사진 선택</div>
+      <div class="avatar-modal-close" id="avatar-modal-close">&times;</div>
+    </div>
+
+    <div class="avatar-picker-grid">
+      <div class="avatar-option" data-index="1"></div>
+      <div class="avatar-option" data-index="2"></div>
+      <div class="avatar-option" data-index="3"></div>
+      <div class="avatar-option" data-index="4"></div>
+      <div class="avatar-option" data-index="5"></div>
+      <div class="avatar-option" data-index="6"></div>
+      <div class="avatar-option" data-index="7"></div>
+      <div class="avatar-option" data-index="8"></div>
+      <div class="avatar-option" data-index="9"></div>
+      <div class="avatar-option" data-index="10"></div>
+    </div>
+
+    <div class="avatar-modal-footer">
+      <button id="avatar-confirm-btn" class="avatar-confirm-btn">확인</button>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const avatarDiv = document.getElementById("avatar");
+  const modal = document.getElementById("avatar-modal");
+  const editBtn = document.getElementById("edit-profile-btn");
+  const closeBtn = document.getElementById("avatar-modal-close");
+  const confirmBtn = document.getElementById("avatar-confirm-btn");
+
+  const options = document.querySelectorAll(".avatar-option");
+
+  // static 경로 prefix (예: /static/img/)
+  const staticBase = "{% static 'img' %}/";
+
+  // 현재 저장된 인덱스 (없으면 1)
+  let selectedIndex = parseInt(avatarDiv.dataset.currentIndex || "1", 10);
+  let pendingIndex = selectedIndex;
+
+  // 프로필 이미지 적용 함수
+  function applyAvatar(index) {
+    avatarDiv.style.backgroundImage = "url('" + staticBase + "cat_" + index + ".png')";
+  }
+
+  // 선택 UI 업데이트
+  function updateSelectionUI() {
+    options.forEach(function (opt) {
+      opt.classList.remove("selected");
+      if (parseInt(opt.dataset.index, 10) === pendingIndex) {
+        opt.classList.add("selected");
+      }
+    });
+  }
+
+  // 초기 상태 반영
+  applyAvatar(selectedIndex);
+  updateSelectionUI();
+
+  // 각 옵션에 이미지 배경 적용
+  options.forEach(function (opt) {
+    const n = opt.dataset.index;
+    opt.style.backgroundImage = "url('" + staticBase + "cat_" + n + ".png')";
+  });
+
+  // 모달 열기
+  editBtn.addEventListener("click", function () {
+    modal.classList.remove("hidden");
+  });
+
+  // 닫기(X)
+  closeBtn.addEventListener("click", function () {
+    modal.classList.add("hidden");
+  });
+
+  // 바깥 클릭 시 닫기
+  modal.addEventListener("click", function (e) {
+    if (e.target === modal) {
+      modal.classList.add("hidden");
+    }
+  });
+
+  // 옵션 클릭
+  options.forEach(function (opt) {
+    opt.addEventListener("click", function () {
+      pendingIndex = parseInt(opt.dataset.index, 10);
+      updateSelectionUI();
+    });
+  });
+
+  // CSRF 토큰 가져오기
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  const csrftoken = getCookie('csrftoken');
+
+  // 확인 → UI 반영 + 서버 저장
+  confirmBtn.addEventListener("click", function () {
+
+    // 프론트에서 즉시 반영
+    applyAvatar(pendingIndex);
+    selectedIndex = pendingIndex;
+
+    // 서버에 저장 요청
+    fetch("/profile/update-avatar/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken
+      },
+      body: JSON.stringify({
+        avatar_index: pendingIndex
+      })
+    }).then(function (res) {
+      return res.json();
+    }).then(function (data) {
+      console.log("Saved:", data);
+    }).catch(function (err) {
+      console.error("avatar update error", err);
+    });
+
+    modal.classList.add("hidden");
+  });
+});
+</script>
+
+{% endblock %}
