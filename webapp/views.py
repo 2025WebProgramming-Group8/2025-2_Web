@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt # API 호출을 위해 필요
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 from django.contrib.auth import logout, authenticate, login
 from django.contrib.auth.forms import UserCreationForm
@@ -70,17 +70,52 @@ def user_profile(request: HttpRequest) -> HttpResponse:
         user=request.user,
         defaults={"nickname": request.user.username, "level": 1},
     )
+    total_time_display = "0시간 0분 0초"
+    
+    total_time_display = "0시간 0분 0초" # 📌 초기값에 초 추가
+    
+    if request.user.is_authenticated:
+        member_links = StudyGroupMember.objects.filter(user=request.user)
+        total_time_result = member_links.aggregate(
+            total_seconds=Sum('group_study_time')
+        )['total_seconds']
+        
+        if total_time_result:
+            
+            # 총 초 단위로 변환
+            if hasattr(total_time_result, 'total_seconds'):
+                total_seconds = total_time_result.total_seconds()
+            else:
+                total_seconds = total_time_result 
+                
+            # 시, 분, 초 계산 
+            hours = int(total_seconds // 3600)
+            minutes = int((total_seconds % 3600) // 60)
+            seconds = int(total_seconds % 60) # 👈 초 계산 추가
+            
+            parts = []
+            if hours > 0:
+                parts.append(f"{hours}시간")
+            if minutes > 0 or hours > 0: # 시가 있거나 분이 0 이상일 때 분 표시
+                 parts.append(f"{minutes}분")
+            
+            # 초는 항상 표시 (총 시간이 0일 때 0초를 표시하기 위함)
+            parts.append(f"{seconds}초")
 
+            total_time_display = " ".join(parts)
+        else:
+            total_time_display = "0분 0초" # 총 시간이 없을 때 기본값
+    
     # avatar_index 필드가 있다고 가정 (없으면 기본값 1)
     avatar_index = getattr(profile, "avatar_index", 1)
 
     context = {
         "profile": profile,
         "avatar_index": avatar_index,
+        "total_study_time_sum": total_time_display,
     }
 
-    return render(request, 'profile.html', {})
-
+    return render(request, 'profile.html', context)
 # 4. 랭킹 페이지 (주간/월간 경쟁 순위)
 def weekly_ranking(request: HttpRequest) -> HttpResponse:
     # 랭킹 데이터를 조회하여 템플릿에 전달
