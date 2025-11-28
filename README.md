@@ -27,16 +27,12 @@
 ├── server/                    # Node.js 서버
 │   └── server.js              # Express 서버 메인 실행 파일
 ├── config/                    # [Django 프로젝트 설정 + 메인 앱 역할]
-│   ├── __pycache__/           # Python 바이트코드 캐시
-│   ├── __init__.py            # Python 모듈 초기화
 │   ├── settings.py            # Django 환경 설정 (DB, INSTALLED_APPS, STATIC 등)
 │   ├── urls.py                # 메인 URL 라우팅
 │   ├── asgi.py                # ASGI(비동기) 서버 설정
 │   └── wsgi.py                # WSGI(배포용) 서버 설정
 ├── webapp/                    # [Django 앱] 핵심 웹 애플리케이션 기능
-│   ├── __pycache__/           # Python 바이트코드 캐시
 │   ├── migrations/            # 데이터베이스 스키마 변경 이력 관리
-│   ├── __init__.py            # Python 모듈 초기화
 │   ├── admin.py               # Django 관리자 페이지 설정
 │   ├── apps.py                # 앱 구성 설정
 │   ├── forms.py               # 웹 폼(Form) 정의 및 유효성 검사
