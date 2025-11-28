@@ -48,4 +48,7 @@ urlpatterns = [
     path('study/<str:group_code>/join/', views.join_study, name='join_study'),
     # API 경로 추가
     path('api/save-time/', views.save_study_time, name='save_study_time'),
+    
+    # 비밀번호 변경 URL
+    path('profile/password/', views.change_password, name='change_password'),
 ]

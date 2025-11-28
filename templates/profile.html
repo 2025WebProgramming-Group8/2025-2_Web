@@ -298,10 +298,10 @@
     </div>
 
     <div class="btns">
-      <button class="btn" id="edit-profile-btn">프로필 편집</button>
-      <div class="btn">비밀번호 변경</div>
-      <a href="{% url 'login' %}" class="btn primary">로그아웃</a>
-    </div>
+    <button class="btn" id="edit-profile-btn">프로필 편집</button>
+    <a href="{% url 'change_password' %}" class="btn">비밀번호 변경</a> 
+    <a href="{% url 'logout' %}" class="btn primary">로그아웃</a>
+</div>
   </section>
 
 

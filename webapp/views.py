@@ -6,10 +6,12 @@ from django.views.decorators.csrf import csrf_exempt # API 호출을 위해 필�
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum
 
-from django.contrib.auth import logout, authenticate, login
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import logout, authenticate, login, update_session_auth_hash
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User
 from webapp.models import StudyGroup, UserProfile, StudyGroupMember
+from django.contrib.auth.views import PasswordChangeView
+from django.urls import reverse_lazy
 
 # 1. 게시판 (스터디 그룹 탐색/매칭) 페이지
 def group_list(request: HttpRequest) -> HttpResponse:
@@ -252,3 +254,30 @@ def user_register(request):
         
     context = {'form': form}
     return render(request, 'register.html', context)
+
+# 비밀번호 변경 뷰 함수
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        # PasswordChangeForm을 사용하여 기존 비밀번호와 새 비밀번호를 검증합니다.
+        from django.contrib.auth.forms import PasswordChangeForm
+        form = PasswordChangeForm(request.user, request.POST)
+        
+        if form.is_valid():
+            user = form.save()
+            # 비밀번호 변경 후 세션을 업데이트합니다. (필수)
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, user)
+            return redirect('profile')
+        else:
+            # 폼에 오류가 있을 경우, 오류 메시지를 포함한 폼을 다시 렌더링합니다.
+            pass
+    else:
+        # GET 요청 시 빈 폼을 생성합니다.
+        from django.contrib.auth.forms import PasswordChangeForm
+        form = PasswordChangeForm(request.user)
+        
+    context = {
+        'form': form,
+    }
+    return render(request, 'change_password.html', context) # 템플릿 이름은 'change_password.html'로 가정
