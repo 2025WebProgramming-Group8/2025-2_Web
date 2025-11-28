@@ -26,9 +26,10 @@
 │   ├── __init__.py            # Python 모듈 초기화 파일
 │   ├── settings.py            # Django 환경 설정 (DB, INSTALLED_APPS, STATIC 등)
 │   ├── urls.py                # 메인 URL 라우팅
-│   ├── views.py               # 페이지 렌더링 뷰 함수
 │   ├── asgi.py                # ASGI(비동기) 서버 설정
 │   └── wsgi.py                # WSGI(배포용) 서버 설정
+├── webapp                     # 
+│   ├── views.py               # 페이지 렌더링 뷰 함수
 ├── templates/                 # HTML 템플릿
 │   ├── base.html              # 기본 레이아웃 템플릿
 │   ├── board.html             # 게시판 페이지
@@ -40,6 +41,7 @@
 │   └── timer.html             # 타이머 페이지
 └── static/                    # 정적 파일
     └── style.css              # 프로젝트 공통 스타일시트
+
 ```
 ## 👥 팀원 (Team Members)
 
