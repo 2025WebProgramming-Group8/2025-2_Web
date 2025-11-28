@@ -75,9 +75,9 @@
     <form action="{% url 'login' %}" method="post">
       {% csrf_token %} 
       
-      {% if form.errors %}
+      {% if error_message %}
         <div style="color:#ff6b6b; font-size:14px; margin-bottom:10px; text-align:center;">
-            아이디 또는 비밀번호가 일치하지 않습니다.
+            {{ error_message }}
         </div>
       {% endif %}
 

@@ -21,25 +21,38 @@
 2025-2_Web/
 ├── manage.py                  # 서버 실행, 마이그레이션 등 Django 관리 명령어
 ├── db.sqlite3                 # SQLite 데이터베이스 파일
-├── config/                    # 프로젝트 설정 + 메인 앱
-│   ├── __pycache__/           # Python 바이트코드 캐시 디렉토리
-│   ├── __init__.py            # Python 모듈 초기화 파일
+├── package-lock.json          # Node.js 패키지 종속성 잠금 파일
+├── package.json               # Node.js 패키지 종속성 파일
+├── node_modules/              # Node.js/Express 모듈 설치 디렉토리
+├── server/                    # Node.js 서버
+│   └── server.js              # Express 서버 메인 실행 파일
+├── config/                    # [Django 프로젝트 설정 + 메인 앱 역할]
 │   ├── settings.py            # Django 환경 설정 (DB, INSTALLED_APPS, STATIC 등)
 │   ├── urls.py                # 메인 URL 라우팅
-│   ├── views.py               # 페이지 렌더링 뷰 함수
 │   ├── asgi.py                # ASGI(비동기) 서버 설정
 │   └── wsgi.py                # WSGI(배포용) 서버 설정
-├── templates/                 # HTML 템플릿
+├── webapp/                    # [Django 앱] 핵심 웹 애플리케이션 기능
+│   ├── migrations/            # 데이터베이스 스키마 변경 이력 관리
+│   ├── admin.py               # Django 관리자 페이지 설정
+│   ├── apps.py                # 앱 구성 설정
+│   ├── forms.py               # 웹 폼(Form) 정의 및 유효성 검사
+│   ├── models.py              # 데이터베이스 모델(DB 테이블 구조) 정의
+│   ├── tests.py               # 자동화된 테스트 코드
+│   └── views.py               # 사용자 요청 처리 및 페이지 렌더링 뷰 함수
+├── templates/                 # HTML 템플릿 파일
 │   ├── base.html              # 기본 레이아웃 템플릿
 │   ├── board.html             # 게시판 페이지
+│   ├── create_study.html      # 스터디 생성 페이지 (추정)
 │   ├── footer.html            # 공통 footer 영역
 │   ├── gnb.html               # 네비게이션(Global Navigation Bar)
 │   ├── login.html             # 로그인 페이지
 │   ├── profile.html           # 프로필 페이지
 │   ├── ranking.html           # 랭킹 페이지
+│   ├── register.html          # 회원가입 페이지 (추정)
 │   └── timer.html             # 타이머 페이지
 └── static/                    # 정적 파일
     └── style.css              # 프로젝트 공통 스타일시트
+
 ```
 ## 👥 팀원 (Team Members)
 
