@@ -1,4 +1,4 @@
-import json
+import json, string, random
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
@@ -12,6 +12,8 @@ from django.contrib.auth.models import User
 from webapp.models import StudyGroup, UserProfile, StudyGroupMember
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
+from .forms import RegisterForm, StudyGroupForm
+from django.contrib import messages
 
 # 1. 게시판 (스터디 그룹 탐색/매칭) 페이지
 def group_list(request: HttpRequest) -> HttpResponse:
@@ -201,13 +203,50 @@ def save_study_time(request: HttpRequest):
             
     return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed'}, status=405)
 
+@login_required
 def create_study(request):
-    """
-    새로운 스터디를 개설하는 페이지를 렌더링합니다.
-    """
-    # 임시 템플릿(create_study.html)이 있다고 가정하고 렌더링
-    return render(request, 'create_study.html', {})
+    
+    # 임시 그룹 코드 생성 함수는 그대로 유지
+    def generate_random_code(length=6):
+        import string, random
+        characters = string.ascii_uppercase + string.digits
+        return ''.join(random.choice(characters) for i in range(length))
 
+    if request.method == 'POST':
+        form = StudyGroupForm(request.POST) # POST 데이터로 폼 객체 생성
+        if form.is_valid():
+            try:
+                new_study = form.save(commit=False)
+
+                # 고유 그룹 코드 생성 및 할당 (충돌 방지)
+                while True:
+                    group_code = generate_random_code()
+                    if not StudyGroup.objects.filter(group_code=group_code).exists():
+                        break
+                new_study.group_code = group_code
+                new_study.save() # 1차 저장
+                # 멤버십 객체 생성 및 M2M 관계 동기화
+                StudyGroupMember.objects.create(
+                    user=request.user,
+                    study_group=new_study,
+                    group_study_time=timedelta(seconds=0)
+                )
+                # M2M 관계 동기화 (StudyGroupMember를 through로 지정했더라도 안전하게 연결)
+                new_study.members.add(request.user) 
+
+                return redirect('timer', group_code=group_code)
+
+            except Exception as e:
+                # DB 저장 중 오류 발생 (예: IntegrityError)
+                print(f"DB 저장 중 심각한 오류 발생: {e}")
+                messages.error(request, '스터디 생성 중 시스템 오류가 발생했습니다.')
+    else: # GET 요청
+        form = StudyGroupForm() # 빈 폼 객체 생성
+
+    # 최종 렌더링: 오류 메시지를 포함한 폼 객체를 전달
+    return render(request, 'create_study.html', {'form': form})
+
+@login_required
 def join_study(request: HttpRequest, group_code: str) -> HttpResponse:
     study = get_object_or_404(StudyGroup, group_code=group_code)
     
@@ -242,10 +281,6 @@ def update_avatar(request):
         return JsonResponse({"status": "ok"})
     else:
         return HttpResponseBadRequest("Avatar index out of range")
-        # 성공 후 타이머 페이지로 리디렉션
-        return redirect('timer', group_code=group_code) 
-    
-    return redirect('timer', group_code=group_code)
 
 def user_register(request):
     if request.method == 'POST':
@@ -266,24 +301,15 @@ def user_register(request):
 def change_password(request):
     if request.method == 'POST':
         # PasswordChangeForm을 사용하여 기존 비밀번호와 새 비밀번호를 검증합니다.
-        from django.contrib.auth.forms import PasswordChangeForm
         form = PasswordChangeForm(request.user, request.POST)
-        
         if form.is_valid():
             user = form.save()
             # 비밀번호 변경 후 세션을 업데이트합니다. (필수)
-            from django.contrib.auth import update_session_auth_hash
             update_session_auth_hash(request, user)
             return redirect('profile')
-        else:
-            # 폼에 오류가 있을 경우, 오류 메시지를 포함한 폼을 다시 렌더링합니다.
-            pass
     else:
-        # GET 요청 시 빈 폼을 생성합니다.
-        from django.contrib.auth.forms import PasswordChangeForm
-        form = PasswordChangeForm(request.user)
-        
+        form = PasswordChangeForm(request.user) # GET 요청 시 빈 폼을 생성합니다.
     context = {
         'form': form,
     }
-    return render(request, 'change_password.html', context) # 템플릿 이름은 'change_password.html'로 가정
+    return render(request, 'change_password.html', context)
