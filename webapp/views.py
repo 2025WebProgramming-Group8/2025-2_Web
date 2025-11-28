@@ -1,8 +1,9 @@
 import json
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpRequest, HttpResponse, JsonResponse, Http404
+from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt # API 호출을 위해 필요
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 
 from django.contrib.auth import logout, authenticate, login
@@ -62,8 +63,22 @@ def user_logout(request):
     return redirect('board')
  
 # 3. 사용자 프로필 및 고양이 관리 페이지
+@login_required
 def user_profile(request: HttpRequest) -> HttpResponse:
     # 사용자 데이터(닉네임, 고양이 레벨 등)를 템플릿에 전달할 수 있음
+    profile, _ = UserProfile.objects.get_or_create(
+        user=request.user,
+        defaults={"nickname": request.user.username, "level": 1},
+    )
+
+    # avatar_index 필드가 있다고 가정 (없으면 기본값 1)
+    avatar_index = getattr(profile, "avatar_index", 1)
+
+    context = {
+        "profile": profile,
+        "avatar_index": avatar_index,
+    }
+
     return render(request, 'profile.html', {})
 
 # 4. 랭킹 페이지 (주간/월간 경쟁 순위)
@@ -164,6 +179,26 @@ def join_study(request: HttpRequest, group_code: str) -> HttpResponse:
         )
         study.members.add(request.user)
         
+    # 다시 타이머 페이지로 돌아갑니다 (이제 멤버로 인식됨)
+    return redirect('timer', group_code=group_code)
+
+#프로필 이미지 저장
+@login_required
+def update_avatar(request):
+    profile = request.user.profile
+
+    try:
+        data = json.loads(request.body)
+        avatar_index = int(data.get("avatar_index"))
+    except Exception:
+        return HttpResponseBadRequest("Invalid data")
+
+    if 1 <= avatar_index <= 10:
+        profile.avatar_index = avatar_index
+        profile.save()
+        return JsonResponse({"status": "ok"})
+    else:
+        return HttpResponseBadRequest("Avatar index out of range")
         # 성공 후 타이머 페이지로 리디렉션
         return redirect('timer', group_code=group_code) 
     

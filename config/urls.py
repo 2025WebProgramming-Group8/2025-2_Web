@@ -33,6 +33,8 @@ urlpatterns = [
     # 3. 프로필 페이지 (http://localhost:8000/profile/)
     path('profile/', views.user_profile, name='profile'),
     
+    path('profile/update-avatar/', views.update_avatar, name='update_avatar'),
+
     # 4. 랭킹 페이지 (http://localhost:8000/ranking/)
     path('ranking/', views.weekly_ranking, name='ranking'),
     
