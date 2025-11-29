@@ -1,4 +1,4 @@
-import json, string, random
+import json
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
@@ -12,8 +12,7 @@ from django.contrib.auth.models import User
 from webapp.models import StudyGroup, UserProfile, StudyGroupMember
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
-from .forms import RegisterForm, StudyGroupForm
-from django.contrib import messages
+from django.db.models import Sum
 
 # 1. 게시판 (스터디 그룹 탐색/매칭) 페이지
 def group_list(request: HttpRequest) -> HttpResponse:
@@ -74,6 +73,34 @@ def user_profile(request: HttpRequest) -> HttpResponse:
         user=request.user,
         defaults={"nickname": request.user.username, "level": 1},
     )
+    
+    if request.method == "POST":
+        nickname = request.POST.get("nickname", "").strip()
+        email = request.POST.get("email", "").strip()
+        avatar_index = request.POST.get("avatar_index")
+
+        # 닉네임 변경
+        if nickname:
+            profile.nickname = nickname
+
+        # 이메일 변경
+        if email:
+            request.user.email = email
+
+        # 아바타 변경 (1~10 사이만 허용)
+        if avatar_index:
+            try:
+                idx = int(avatar_index)
+                if 1 <= idx <= 10:
+                    profile.avatar_index = idx
+            except ValueError:
+                pass  # 숫자 아닌 값 들어오면 무시
+
+        request.user.save()
+        profile.save()
+
+        return redirect("profile")  # 저장 후 프로필 페이지 다시 로딩
+    
     total_time_display = "0시간 0분 0초"
     
     total_time_display = "0시간 0분 0초" # 📌 초기값에 초 추가
@@ -126,10 +153,14 @@ def user_profile(request: HttpRequest) -> HttpResponse:
     }
 
     return render(request, 'profile.html', context)
-# 4. 랭킹 페이지 (주간/월간 경쟁 순위)
+# 4. 랭킹 페이지 (공부 시간 순으로 정렬)
 def weekly_ranking(request: HttpRequest) -> HttpResponse:
-    # 랭킹 데이터를 조회하여 템플릿에 전달
-    return render(request, 'ranking.html', {})
+    # 1. 공부 기록이 있는 모든 유저를 가져옵니다.
+    # 2. total_study_time이 높은 순서대로 정렬합니다.
+    # 3. 상위 8명만 자릅니다 (포디움 3명 + 리스트 5명)
+    rankers = UserProfile.objects.exclude(total_study_time=None).order_by('-total_study_time')[:8]
+    
+    return render(request, 'ranking.html', {'rankers': rankers})
 
 # 5. 스터디룸 타이머 페이지 (실시간 Websocket 연결 필요)
 def study_timer(request: HttpRequest, group_code: str) -> HttpResponse:
@@ -188,6 +219,21 @@ def save_study_time(request: HttpRequest):
             member_profile.group_study_time = duration_to_save
             member_profile.save()
             
+            total_time = StudyGroupMember.objects.filter(user=user).aggregate(
+                total=Sum('group_study_time')
+            )['total']
+            
+            user.profile.total_study_time = total_time
+            
+            if total_time is not None:
+                total_seconds = int(total_time.total_seconds())
+                user.profile.level = total_seconds // 300 + 1
+            else:
+                user.profile.level = 1
+            
+            user.profile.save()
+            # ---------------------------------------------------------
+
             return JsonResponse({'status': 'success', 'saved_time': final_time})        
         # 예외 처리
         except User.DoesNotExist:
@@ -203,50 +249,13 @@ def save_study_time(request: HttpRequest):
             
     return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed'}, status=405)
 
-@login_required
 def create_study(request):
-    
-    # 임시 그룹 코드 생성 함수는 그대로 유지
-    def generate_random_code(length=6):
-        import string, random
-        characters = string.ascii_uppercase + string.digits
-        return ''.join(random.choice(characters) for i in range(length))
+    """
+    새로운 스터디를 개설하는 페이지를 렌더링합니다.
+    """
+    # 임시 템플릿(create_study.html)이 있다고 가정하고 렌더링
+    return render(request, 'create_study.html', {})
 
-    if request.method == 'POST':
-        form = StudyGroupForm(request.POST) # POST 데이터로 폼 객체 생성
-        if form.is_valid():
-            try:
-                new_study = form.save(commit=False)
-
-                # 고유 그룹 코드 생성 및 할당 (충돌 방지)
-                while True:
-                    group_code = generate_random_code()
-                    if not StudyGroup.objects.filter(group_code=group_code).exists():
-                        break
-                new_study.group_code = group_code
-                new_study.save() # 1차 저장
-                # 멤버십 객체 생성 및 M2M 관계 동기화
-                StudyGroupMember.objects.create(
-                    user=request.user,
-                    study_group=new_study,
-                    group_study_time=timedelta(seconds=0)
-                )
-                # M2M 관계 동기화 (StudyGroupMember를 through로 지정했더라도 안전하게 연결)
-                new_study.members.add(request.user) 
-
-                return redirect('timer', group_code=group_code)
-
-            except Exception as e:
-                # DB 저장 중 오류 발생 (예: IntegrityError)
-                print(f"DB 저장 중 심각한 오류 발생: {e}")
-                messages.error(request, '스터디 생성 중 시스템 오류가 발생했습니다.')
-    else: # GET 요청
-        form = StudyGroupForm() # 빈 폼 객체 생성
-
-    # 최종 렌더링: 오류 메시지를 포함한 폼 객체를 전달
-    return render(request, 'create_study.html', {'form': form})
-
-@login_required
 def join_study(request: HttpRequest, group_code: str) -> HttpResponse:
     study = get_object_or_404(StudyGroup, group_code=group_code)
     
@@ -281,13 +290,18 @@ def update_avatar(request):
         return JsonResponse({"status": "ok"})
     else:
         return HttpResponseBadRequest("Avatar index out of range")
+        # 성공 후 타이머 페이지로 리디렉션
+        return redirect('timer', group_code=group_code) 
+    
+    return redirect('timer', group_code=group_code)
 
 def user_register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            # 회원가입 성공 후 로그인 페이지 또는 게시판으로 리디렉션
+            user = form.save(commit=False)
+            user.email = request.POST.get('email', '').strip()
+            user.save()
             return redirect('login') 
     else:
         # GET 요청 시 빈 폼 객체를 생성합니다.
@@ -301,15 +315,24 @@ def user_register(request):
 def change_password(request):
     if request.method == 'POST':
         # PasswordChangeForm을 사용하여 기존 비밀번호와 새 비밀번호를 검증합니다.
+        from django.contrib.auth.forms import PasswordChangeForm
         form = PasswordChangeForm(request.user, request.POST)
+        
         if form.is_valid():
             user = form.save()
             # 비밀번호 변경 후 세션을 업데이트합니다. (필수)
+            from django.contrib.auth import update_session_auth_hash
             update_session_auth_hash(request, user)
             return redirect('profile')
+        else:
+            # 폼에 오류가 있을 경우, 오류 메시지를 포함한 폼을 다시 렌더링합니다.
+            pass
     else:
-        form = PasswordChangeForm(request.user) # GET 요청 시 빈 폼을 생성합니다.
+        # GET 요청 시 빈 폼을 생성합니다.
+        from django.contrib.auth.forms import PasswordChangeForm
+        form = PasswordChangeForm(request.user)
+        
     context = {
         'form': form,
     }
-    return render(request, 'change_password.html', context)
+    return render(request, 'change_password.html', context) # 템플릿 이름은 'change_password.html'로 가정

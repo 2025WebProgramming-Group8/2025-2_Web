@@ -107,29 +107,10 @@
     margin-top:4px;
   }
 
-  .btns{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-  }
-  .btn{
-    background:#1b1e29;
-    border:1px solid var(--line);
-    color:var(--ink);
-    border-radius:10px;
-    padding:10px 14px;
-    text-align:center;
-    cursor:pointer;
-    flex:1 1 auto;
-    min-width:110px;
-    font-size:14px;
-  }
-  .btn.primary{
-    background:var(--accent);
-    color:#0b0c12;
-    font-weight:800;
-    border:none;
-  }
+  .btns{display:flex;flex-wrap:wrap;gap:8px;}
+  .btn{display:flex;align-items:center;justify-content:center;background:#1b1e29;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px 14px;text-align:center;cursor:pointer;flex:1 1 auto;min-width:110px;font-size:14px;}
+  .btn.primary{background:var(--accent);color:#0b0c12;font-weight:800;border:none;}
+
 
   /* RIGHT: STUDY LIST */
   .studies-head{
@@ -337,7 +318,8 @@
 
 <!-- 🔵 아바타 선택 모달 -->
 <div id="avatar-modal" class="avatar-modal hidden">
-  <div class="avatar-modal-content">
+  <form method="post" class="avatar-modal-content">
+    {% csrf_token %}
 
     <div class="avatar-modal-header">
       <div class="avatar-modal-title">프로필 사진 선택</div>
@@ -357,11 +339,28 @@
       <div class="avatar-option" data-index="10"></div>
     </div>
 
-    <div class="avatar-modal-footer">
-      <button id="avatar-confirm-btn" class="avatar-confirm-btn">확인</button>
+        <!-- 이름 / 닉네임 입력 -->
+    <div class="field">
+      <label>이름 </label>
+      <input type="text" name="nickname"
+            value="{{ request.user.profile.nickname|default:request.user.username }}">
     </div>
 
-  </div>
+    <!-- 이메일 입력 -->
+    <div class="field">
+      <label>이메일</label>
+      <input type="email" name="email" value="{{ request.user.email }}">
+    </div>
+
+    <!-- 선택한 아바타 index 서버로 보내기 -->
+    <input type="hidden" name="avatar_index" id="selected-avatar-input">
+
+
+    <div class="avatar-modal-footer">
+      <button type="submit" id="avatar-confirm-btn" class="avatar-confirm-btn">저장</button>
+    </div>
+
+  </form>
 </div>
 
 

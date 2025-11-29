@@ -4,7 +4,6 @@
     <div class="nav" role="menubar">
       <a role="menuitem" href="{% url 'board' %}">게시판</a>
       <a role="menuitem" href="{% url 'ranking' %}">랭킹</a>
-      <a role="menuitem" href="{% url 'timer' group_code='TESTCODE' %}">타이머</a>
       
       {% if user.is_authenticated %}
           <a role="menuitem" href="{% url 'profile' %}" style="color: #93b2ff; font-weight: bold;">

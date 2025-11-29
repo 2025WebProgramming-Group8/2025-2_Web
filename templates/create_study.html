@@ -1,73 +1,46 @@
 {% extends 'base.html' %} 
-{% block title %}새 스터디 개설{% endblock %}
+{% block title %}스터디 개설{% endblock %}
 
 {% block content %}
 <style>
-    /* 📌 1. 공통 폼 필드 스타일 정의 (깨진 스타일 복구) */
-    .wrap input:not([type="submit"]), .wrap textarea, .wrap select {
-        width: 100%;
-        background: #1b1e29;
-        color: var(--ink);
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 12px;
-        font-size: 15px;
-        /* Django 기본 렌더링에 맞게 스타일 적용 */
-    }
-    textarea.input, .wrap textarea { 
-        min-height: 100px; 
-        resize: vertical; 
-    }
-    
-    /* 기존 스타일 유지 */
+    /* login/register 스타일 재사용 */
     .wrap { max-width:600px; margin:40px auto; padding:20px; }
     .card { background:#161821; border:1px solid #232637; border-radius:16px; padding:30px; }
     .title { font-size:24px; font-weight:900; margin-bottom:20px; text-align:center; }
+    
     .field { margin-bottom:16px; }
     .label { display:block; margin-bottom:8px; color:#a4a7b8; font-size:14px; }
+    .input { width:100%; background:#1b1e29; color:#e9eaf3; border:1px solid #232637; border-radius:12px; padding:12px; font-size:15px; }
+    /* textarea 전용 스타일 */
+    textarea.input { min-height: 100px; resize: vertical; }
+    
     .btn { width:100%; padding:14px; border-radius:12px; border:none; background:#93b2ff; color:#0b0c12; font-weight:900; cursor:pointer; margin-top:10px; }
 </style>
 
 <div class="wrap">
     <section class="card">
         <h1 class="title">새 스터디 만들기</h1>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div style="color:red; text-align:center; margin-bottom: 10px;">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
+        
         <form method="post">
             {% csrf_token %}
             
-            {% for field in form %}
-                <div class="field">
-                    <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    
-                    {{ field }}
+            <div class="field">
+                <label class="label">과목 / 카테고리</label>
+                <input class="input" name="subject" placeholder="예: 웹프로그래밍, 알고리즘" required>
+            </div>
 
-                    {% for error in field.errors %}
-                        <div style="color:#ff6b6b; font-size:12px; margin-top:4px;">{{ error }}</div>
-                    {% endfor %}
-                    
-                    {% if field.help_text %}
-                        <small style="color:var(--muted); font-size:12px;">{{ field.help_text }}</small>
-                    {% endif %}
-                </div>
-            {% endfor %}
-            
-            {% if form.non_field_errors %}
-                <div style="color:#ff6b6b; font-size:14px; text-align:center; margin-bottom: 10px;">
-                    {{ form.non_field_errors }}
-                </div>
-            {% endif %}
+            <div class="field">
+                <label class="label">스터디 이름</label>
+                <input class="input" name="name" placeholder="스터디 이름을 입력하세요" required>
+            </div>
+
+            <div class="field">
+                <label class="label">소개글</label>
+                <textarea class="input" name="description" placeholder="어떤 스터디인지 간단히 소개해주세요"></textarea>
+            </div>
 
             <button class="btn" type="submit">스터디 생성하기</button>
         </form>
-
     </section>
 </div>
 {% endblock %}
