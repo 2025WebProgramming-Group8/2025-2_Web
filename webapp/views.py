@@ -162,6 +162,7 @@ def weekly_ranking(request: HttpRequest) -> HttpResponse:
     return render(request, 'ranking.html', {'rankers': rankers})
 
 # 5. 스터디룸 타이머 페이지 (실시간 Websocket 연결 필요)
+@login_required
 def study_timer(request: HttpRequest, group_code: str) -> HttpResponse:
     
     study = get_object_or_404(StudyGroup, group_code=group_code) 
@@ -197,57 +198,65 @@ def study_timer(request: HttpRequest, group_code: str) -> HttpResponse:
     return render(request, 'timer.html', context)
 
 # Node.js 서버로부터 공부 시간을 받아 DB에 저장하는 API 뷰
+# 상단 import 확인
+from django.db.models import Sum
+from datetime import timedelta
+import json
+
 @csrf_exempt
 def save_study_time(request: HttpRequest):
     if request.method == 'POST':
         try:
-            # 데이터 파싱
+            # 1. 데이터 파싱
             data = json.loads(request.body)
             user_id = data.get('userId')
-            final_time = data.get('currentTime') # 초 단위 정수 (클라이언트에서 전송)
-            room_id = data.get('room') # Node.js 서버에서 room ID도 보내줘야 함
+            final_time = data.get('currentTime')
+            room_id = data.get('room')
 
             user = User.objects.get(id=user_id)
             study = StudyGroup.objects.get(id=room_id)
             
-            # StudyGroupMember 객체를 가져와서 저장
+            # 2. 현재 스터디방의 공부 시간 저장
             member_profile = StudyGroupMember.objects.get(user=user, study_group=study)
-            
-            # DurationField에 맞게 저장
             duration_to_save = timedelta(seconds=int(final_time))
             member_profile.group_study_time = duration_to_save
             member_profile.save()
             
+            # 3. 유저의 전체 총 공부 시간 계산 (모든 스터디방 합산)
             total_time = StudyGroupMember.objects.filter(user=user).aggregate(
                 total=Sum('group_study_time')
             )['total']
             
             user.profile.total_study_time = total_time
             
+            # 4. 레벨 계산 로직 (여기가 중요!)
             if total_time is not None:
                 total_seconds = int(total_time.total_seconds())
-                user.profile.level = total_seconds // 300 + 1
+                
+                # 300초(5분)마다 1업 (1부터 시작)
+                new_level = (total_seconds // 300) + 1
+                
+                user.profile.level = new_level
             else:
                 user.profile.level = 1
             
             user.profile.save()
             # ---------------------------------------------------------
 
-            return JsonResponse({'status': 'success', 'saved_time': final_time})        
+            return JsonResponse({'status': 'success', 'saved_time': final_time, 'new_level': user.profile.level})        
+        
         # 예외 처리
         except User.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
-        except StudyGroup.DoesNotExist: # StudyGroup 조회 실패 시 처리
+        except StudyGroup.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'StudyGroup not found'}, status=404)
-        except StudyGroupMember.DoesNotExist: # 멤버 관계가 없는 경우 처리
+        except StudyGroupMember.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'User is not a member of this study group'}, status=403)
         except Exception as e:
-            # 500 오류 처리 (디버깅에 유용)
             print(f"DB 저장 중 심각한 오류 발생: {e}") 
             return JsonResponse({'status': 'error', 'message': f"Internal Server Error: {e}"}, status=500)
             
     return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed'}, status=405)
-
 @login_required
 def create_study(request):
     

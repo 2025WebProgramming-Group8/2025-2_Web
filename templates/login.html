@@ -61,10 +61,100 @@
       .visual{ min-height:200px; }
       .card{ min-height:auto; }
     }
+    .visual {
+        background: linear-gradient(135deg, #161821 0%, #1b1e29 100%); /* 은은한 그라데이션 */
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        color: var(--ink);
+    }
+    
+    .visual-content {
+        max-width: 320px;
+    }
+
+    .brand-slogan {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 40px;
+        line-height: 1.4;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .feature-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .feature-list .icon {
+        font-size: 24px;
+        background: rgba(147, 178, 255, 0.1);
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    .feature-list .text b {
+        display: block;
+        font-size: 16px;
+        margin-bottom: 4px;
+        color: #fff;
+    }
+
+    .feature-list .text p {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0;
+        line-height: 1.4;
+    }
   </style>
 
   <section class="visual" aria-label="브랜드 비주얼">
-    향후 이미지/일러스트 영역
+    <div class="visual-content">
+        <h2 class="brand-slogan">
+            <span style="color:var(--accent)">LazyCat</span>과 함께<br>
+            즐겁게 몰입하세요.
+        </h2>
+        
+        <ul class="feature-list">
+            <li>
+                <span class="icon">⏱️</span>
+                <div class="text">
+                    <b>실시간 타이머</b>
+                    <p>공부 시간을 정확하게 기록하세요.</p>
+                </div>
+            </li>
+            <li>
+                <span class="icon">🏆</span>
+                <div class="text">
+                    <b>랭킹 시스템</b>
+                    <p>친구들과 선의의 경쟁을 펼쳐보세요.</p>
+                </div>
+            </li>
+            <li>
+                <span class="icon">💬</span>
+                <div class="text">
+                    <b>스터디 그룹 & 채팅</b>
+                    <p>혼자가 아닙니다. 함께 공부해요.</p>
+                </div>
+            </li>
+        </ul>
+    </div>
   </section>
 
   <section class="card" aria-label="로그인">

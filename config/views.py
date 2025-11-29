@@ -23,6 +23,7 @@ def weekly_ranking(request: HttpRequest) -> HttpResponse:
     return render(request, 'ranking.html', {})
 
 # 5. 스터디룸 타이머 페이지 (실시간 Websocket 연결 필요)
+@login_required
 def study_timer(request: HttpRequest, group_code: str) -> HttpResponse:
     
     # 1. group_code로 스터디 그룹 객체를 찾거나, 없으면 404 에러를 반환

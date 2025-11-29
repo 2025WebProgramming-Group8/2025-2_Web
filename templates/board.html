@@ -26,8 +26,35 @@
 
     /* Study list with CTA */
     .list{ max-width:900px; margin:0 auto 40px; padding:0 20px; display:grid; grid-template-columns:1fr 120px; gap:12px }
-    .cell{ background:var(--panel); border:1px solid var(--line); border-radius:12px; min-height:46px; display:flex; align-items:center; justify-content:center; padding:10px 14px }
-    .cell.name{ justify-content:flex-start; font-weight:700 }
+    
+    .cell{ background:var(--panel); border:1px solid var(--line); border-radius:12px; min-height:60px; display:flex; align-items:center; justify-content:center; padding:12px 16px }
+    
+    /* 📌 [수정됨] 제목+설명글을 세로로 배치하기 위한 스타일 */
+    .cell.name { 
+        justify-content: center; 
+        align-items: flex-start; /* 왼쪽 정렬 */
+        flex-direction: column;  /* 위아래 배치 */
+        gap: 4px;                /* 제목과 설명 사이 간격 */
+    }
+    
+    /* 📌 [추가됨] 제목 스타일 */
+    .group-title {
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    /* 📌 [추가됨] 설명글 스타일 (회색, 작은 글씨) */
+    .group-desc {
+        font-size: 13px;
+        color: var(--muted);
+        font-weight: 400;
+        /* 긴 글자는 말줄임표(...) 처리 */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
     .cell.cta{ background:#1b1e29; cursor:pointer }
     .cell.cta:hover{ outline:2px solid #2a2f47 }
 
@@ -39,7 +66,8 @@
     @media (max-width:700px){
       .list{ grid-template-columns:1fr 96px }
     }
-  </style>
+</style>
+
     <div class="search">
         <form method="get" action="{% url 'board' %}">
             <input 
@@ -57,15 +85,24 @@
         {% if groups %}
             {% for group in groups %}
             <div class="cell name">
-                [{{ group.subject }}] {{ group.name }}
+                <div class="group-title">
+                    [{{ group.subject }}] {{ group.name }}
+                </div>
+                
+                {% if group.description %}
+                    <div class="group-desc">
+                        {{ group.description|truncatechars:40 }}
+                    </div>
+                {% endif %}
             </div>
+
             <div class="cell cta">
                 <a href="{% url 'timer' group_code=group.group_code %}">들어가기</a>
             </div>
             {% endfor %}
             
         {% else %}
-            <div class="cell name" style="grid-column: 1 / -1; justify-content: center; color: gray;">
+            <div class="cell name" style="grid-column: 1 / -1; justify-content: center; color: gray; align-items: center;">
                 아직 개설된 스터디가 없습니다.
             </div>
         {% endif %}

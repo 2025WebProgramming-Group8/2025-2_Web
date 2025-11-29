@@ -1,148 +1,376 @@
 {% extends 'base.html' %} 
+{% load static %} 
 {% block title %}타이머{% endblock %}
 
 {% block top_area %}
 <div class="topbar" style="max-width:1100px;margin:16px auto 0;padding:0 20px">
-    <!-- 뒤로가기 버튼 -->
-    <div class="btn" aria-label="뒤로"
-         onclick="if (history.length > 1) { history.back(); } else { window.location.href='{% url 'board' %}'; }">
-        ←
-    </div>
-
-    <!-- 스터디룸 이름 (그대로 유지) -->
+    <a href="{% url 'board' %}" class="btn" aria-label="뒤로" onclick="if (history.length > 1) { history.back(); return false; }">←</a>
     <div class="room" aria-label="스터디룸 이름">{{ study.name }}</div>
-
-    <!-- 홈 버튼 -->
-    <div class="btn" aria-label="홈"
-         onclick="window.location.href='{% url 'board' %}'">
-        홈
-    </div>
+    <a href="{% url 'board' %}" class="btn" aria-label="홈">홈</a>
 </div>
-
 {% endblock %}
 
-{% block header_content %}
-    {% endblock %}
+{% block header_content %}{% endblock %}
 
 {% block content %}
-  <style>
+<style>
+    /* Top bar 레이아웃 */
+    .topbar { 
+        display: grid; 
+        grid-template-columns: 80px 1fr 80px; /* 좌측버튼 - 제목 - 우측버튼 비율 */
+        gap: 10px; 
+        margin-bottom: 12px; 
+    }
+    
+    /* 버튼 스타일 (뒤로가기, 홈) */
+    .btn { 
+        background: #1b1e29; 
+        border: 1px solid var(--line); 
+        border-radius: 10px; 
+        padding: 10px 12px; 
+        text-align: center; 
+        cursor: pointer; 
+        color: var(--ink); /* 글자색 */
+        display: flex; /* 글자 중앙 정렬 */
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* 방 이름 스타일 */
+    .room { 
+        background: #161821; 
+        border: 1px solid var(--line); 
+        border-radius: 10px; 
+        padding: 10px 12px; 
+        text-align: center; 
+        font-weight: 800; 
+        color: var(--ink);
+    }
+    /* 기본 변수 */
     :root{ --bg:#0e0f13; --panel:#161821; --ink:#e9eaf3; --muted:#a4a7b8; --line:#232637; --accent:#93b2ff; --ok:#79e08f; --warn:#fbc531; --err:#ff6b6b; }
     *{ box-sizing:border-box }
     html,body{ height:100% }
     body{ margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR",sans-serif; }
     a{ color:inherit; text-decoration:none }
 
-    /* Layout */
+    /* 레이아웃 */
     .wrap{ max-width:1100px; margin:24px auto; padding:0 20px; display:grid; grid-template-columns: 1fr 320px; gap:16px }
     .panel{ background:#1b1e2a; border:1px solid var(--line); border-radius:14px; padding:14px }
-
-    /* Top bar */
-    .topbar{ display:grid; grid-template-columns:80px 1fr 80px; gap:10px; margin-bottom:12px }
-    .btn{ background:#1b1e29; border:1px solid var(--line); border-radius:10px; padding:10px 12px; text-align:center; cursor:default }
-    .room{ background:#161821; border:1px solid var(--line); border-radius:10px; padding:10px 12px; text-align:center; font-weight:800 }
-
-    /* Left  */
     .left{ display:grid; gap:16px }
-    .char{ height:220px; display:grid; place-items:center; color:var(--muted); border-radius:12px; border:1px dashed #2a2f47 }
+    .panel.char { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
+    /* 🏠 고양이 방 */
+    .cat-room {
+        width: 100%; height: 220px; position: relative;
+        background-color: #2a2328; 
+        overflow: hidden; border-radius: 12px; border: 1px solid var(--line);
+        /* 바닥 패턴 */
+        background-image: linear-gradient(to bottom, #3d3138 40px, transparent 40px);
+    }
+
+    /* 🪑 가구 */
+    .prop {
+        width: 32px; height: 32px;
+        image-rendering: pixelated;
+        background-image: url("{% static 'img/room_tiles.png' %}");
+        background-repeat: no-repeat;
+        transform: scale(2); transform-origin: top left;
+        position: absolute; z-index: 1;
+    }
+    .prop-shelf { width:32px; height:64px; background-position: -32px -32px; }
+    .prop-plant { width:32px; height:32px; background-position: -224px -64px; }
+
+    /* 🐱 고양이 (32px 그리드 완벽 적용) */
+    .sprite-cat {
+        /* 1. 원본 크기인 32px로 고정 */
+        width: 32px; 
+        height: 32px;
+        
+        /* 2. 화면에서 2배로 뻥튀기 (64px 효과) */
+        transform: scale(2); 
+        transform-origin: bottom center;
+
+        image-rendering: pixelated; 
+        background-repeat: no-repeat;
+        
+        /* 3. 원본 이미지 크기 그대로 사용 (좌표 오차 0%) */
+        background-size: auto; 
+        
+        position: absolute;
+        /* 디버깅용 테두리 (확인 후 삭제) */
+        /* border: 1px solid rgba(255,0,0,0.5); */
+    }
+
+    /* 스킨 */
+    .skin-1 { background-image: url("{% static 'img/sprite_cat (1).png' %}"); }
+    .skin-2 { background-image: url("{% static 'img/sprite_cat (2).png' %}"); }
+    .skin-3 { background-image: url("{% static 'img/sprite_cat (3).png' %}"); }
+    .skin-4 { background-image: url("{% static 'img/sprite_cat (4).png' %}"); }
+    .skin-5 { background-image: url("{% static 'img/sprite_cat (5).png' %}"); }
+    .skin-6 { background-image: url("{% static 'img/sprite_cat (6).png' %}"); }
+
+    /* 🎬 동작 (32px 단위 정확한 좌표) */
+    /* Y축: 32px (첫 번째 줄, S방향) */
+
+    /* 1. 앉기 (Sit) */
+    .pose-sit {
+        /* X: 0px (첫 번째 칸) */
+        background-position: 0px -32px; 
+        animation: bounce 2s infinite;
+        left: 50%; bottom: 50px; z-index: 10;
+    }
+
+    /* 2. 눕기 (Lay) */
+    .pose-lay {
+        /* X: -256px (9번째 칸 = 32 * 8) */
+        background-position: -256px -32px; 
+        left: 20%; bottom: 40px; z-index: 5;
+    }
+
+    /* 3. 걷기 (Walk) */
+    .pose-walk {
+        /* 애니메이션으로 제어 */
+        animation: walk-anim 0.8s steps(4) infinite; 
+        left: 75%; bottom: 45px; z-index: 5;
+    }
+
+    /* 4. 달리기 (Run) */
+    .pose-run {
+        animation: run-anim 0.6s steps(4) infinite, move-across 8s linear infinite;
+        bottom: 60px; z-index: 2;
+    }
+
+    /* --- 🔄 애니메이션 키프레임 (정확한 128px 이동) --- */
+    
+    /* 걷기: X = -384px ~ -512px (13~16번째 칸) */
+    @keyframes walk-anim {
+        from { background-position: -384px -32px; } 
+        to { background-position: -512px -32px; }   
+    }
+
+    /* 달리기: X = -512px ~ -640px (17~20번째 칸) */
+    @keyframes run-anim {
+        from { background-position: -512px -32px; } 
+        to { background-position: -640px -32px; }   
+    }
+
+    /* 이동 애니메이션 */
+    @keyframes move-across {
+        0% { left: -50px; transform: scale(2) scaleX(1); }
+        45% { left: 110%; transform: scale(2) scaleX(1); }
+        50% { left: 110%; transform: scale(2) scaleX(-1); } 
+        95% { left: -50px; transform: scale(2) scaleX(-1); }
+        100% { left: -50px; transform: scale(2) scaleX(1); }
+    }
+    @keyframes bounce { 
+        0%, 100% { transform: scale(2) translateY(0); } 
+        50% { transform: scale(2) translateY(-2px); } 
+    }
+
+    /* 말풍선 */
+    .cat-bubble {
+        position: absolute; top: -15px; left: 50%; transform: translateX(-50%) scale(0.5);
+        background: rgba(255,255,255,0.9); color: black; padding: 4px 8px; border-radius: 8px;
+        font-size: 10px; font-weight: bold; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap;
+    }
+    .sprite-cat:hover .cat-bubble { opacity: 1; top: -25px; }
+
+    /* 기타 UI */
+    .topbar .btn {cursor: pointer;}
+    .cat-status { display:flex; gap:8px; align-items:center; font-size:14px; color:var(--muted); }
+    .cat-badge { background:var(--accent); color:#0b0c12; font-weight:800; padding:4px 8px; border-radius:6px; font-size:12px; }
     .members{ display:grid; gap:10px }
     .row{ display:grid; grid-template-columns: 110px 70px 100px 60px 80px; gap:10px; align-items:center }
     .pill{ background:#23273a; border:1px solid var(--line); border-radius:999px; padding:8px 10px; text-align:center; font-weight:800 }
     .state.on{ background:#14361d; border-color:#1f6f38; color:#b9ffd0 }
     .state.off{ background:#3a1918; border-color:#7a2a26; color:#ffd1cc }
-    .state.rest{ background:#3a3314; border-color:#7a6a1f; color:#fff0b3 }
     .timebox, .lvl{ background:#1b1e29; border:1px solid var(--line); border-radius:10px; padding:8px 10px; text-align:center }
     .avatar{ width:34px; height:34px; border-radius:999px; background:#2a2f47; border:1px solid var(--line) }
-
-    /* Right */
     .timer{ display:grid; gap:10px }
     .timer .face{ background:#0f121d; border:1px solid var(--line); border-radius:12px; padding:18px; text-align:center; font-size:40px; font-weight:900; letter-spacing:1px }
     .timer .cta{ background:#1b1e29; border:1px solid var(--line); border-radius:10px; padding:12px; text-align:center; font-weight:800 }
-
-    /* Chat input */
-    .chat{ max-width:1100px; margin:0 auto 26px; padding:0 20px }
-    .chat input{ width:100%; background:#161821; border:1px solid var(--line); border-radius:12px; padding:14px 16px; color:var(--ink) }
-
-    @media (max-width:950px){ .wrap{ grid-template-columns:1fr } }
-
-    .topbar .btn {cursor: pointer;}
-    </style>
-    <section class="left">
-        <div class="panel char">캐릭터 사진과 상태</div>
-
-        <div class="panel members" aria-label="그룹원 현황">
-            {% for member_link in groups %} 
-            <div class="row" data-user-id="{{ member_link.user.id }}">
-                <div class="pill">{{ member_link.user.profile.nickname|default:member_link.user.username }}</div>
-                <div class="pill state off">OFF</div>
-                
-                <div class="timebox">
-                    {{ member_link.group_study_time|default:"0:00:00" }}
-                </div>
-                
-                <div class="avatar"></div>
-                <div class="lvl">Lv. {{ member_link.user.profile.level }}</div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-
-    <aside class="panel timer" aria-label="타이머">
-    <div class="face">0:00:00</div>
+    .chat-wrapper { max-width: 1100px; margin: 0 auto 26px; padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+    .chat-box { height: 350px; background: #161821; border: 1px solid var(--line); border-radius: 12px; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .msg { max-width: 80%; padding: 8px 12px; border-radius: 10px; font-size: 14px; line-height: 1.4; word-break: break-all; }
+    .msg.other { align-self: flex-start; background: #23273a; color: var(--ink); border-top-left-radius: 0; }
+    .msg-name { font-size: 11px; color: var(--muted); margin-bottom: 2px; display: block; }
+    .msg.me { align-self: flex-end; background: var(--accent); color: #0b0c12; border-top-right-radius: 0; font-weight: 600; }
+    .chat-input-row { display: flex; gap: 10px; }
+    .chat-input { flex: 1; background: #161821; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; color: var(--ink); }
+    .chat-input:focus { outline: 1px solid var(--accent); }
+    /* 💬 채팅창 프로필 디자인 (추가됨) */
+    .msg-row {
+        display: flex;
+        align-items: flex-end; /* 메시지 하단에 사진 정렬 */
+        gap: 8px;
+        margin-bottom: 4px;
+    }
     
+    /* 상대방: 사진 왼쪽, 메시지 오른쪽 */
+    .msg-row.other {
+        flex-direction: row;
+    }
+    
+    /* 나: 메시지 오른쪽, 사진 없음 (보통 내 프사는 안 보여줌) */
+    .msg-row.me {
+        flex-direction: row-reverse;
+    }
+
+    /* 프로필 사진 스타일 */
+    .chat-profile-img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #23273a;
+        border: 1px solid var(--line);
+        object-fit: cover; /* 이미지 찌그러짐 방지 */
+        flex-shrink: 0; /*공간 부족해도 줄어들지 않음 */
+    }
+
+    /* 말풍선 꼬리 다듬기 */
+    .msg { max-width: 75%; } /* 사진 공간 확보를 위해 너비 조정 */
+    @media (max-width:950px){ .wrap{ grid-template-columns:1fr } }
+</style>
+
+<section class="left">
+    <div class="panel char">
+        <div class="cat-room" id="cat-room">
+            <div class="prop prop-shelf" style="left: 10%; top: 40px;"></div>
+            <div class="prop prop-plant" style="right: 15%; top: 100px;"></div>
+        </div>
+        
+        <div class="cat-status" style="margin-top: 10px;">
+            <span class="cat-badge">Lv. {{ request.user.profile.level }}</span>
+            <span id="cat-message">가족을 모아보세요!</span>
+        </div>
+    </div>  
+
+    <div class="panel members" aria-label="그룹원 현황">
+        {% for member_link in groups %} 
+        <div class="row" data-user-id="{{ member_link.user.id }}">
+            <div class="pill">{{ member_link.user.profile.nickname|default:member_link.user.username }}</div>
+            <div class="pill state off">OFF</div>
+            <div class="timebox">{{ member_link.group_study_time|default:"0:00:00" }}</div>
+            <div class="avatar"></div>
+            <div class="lvl">Lv. {{ member_link.user.profile.level }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<aside class="panel timer" aria-label="타이머">
+    <div class="face">0:00:00</div>
     <div class="cta">
         {% if is_member %}
             <span style="cursor:pointer">공부 시작</span>
         {% else %}
             <form action="{% url 'join_study' study.group_code %}" method="post">
                 {% csrf_token %}
-                <button type="submit" style="background:none; border:none; color:#93b2ff; font-weight:800; font-size:inherit; cursor:pointer;">
-                    스터디 가입하기
-                </button>
+                <button type="submit" style="background:none; border:none; color:#93b2ff; font-weight:800; font-size:inherit; cursor:pointer;">스터디 가입하기</button>
             </form>
         {% endif %}
-        </div>
-    </aside>
+    </div>
+</aside>
 
 <script src="http://127.0.0.1:3000/socket.io/socket.io.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // ----------------------------------------------------
-    // 1. 기본 설정 및 변수
-    // ----------------------------------------------------
     const socket = io('http://127.0.0.1:3000');
-    
     const myUserId = String("{{ request.user.id }}");
     const myNickname = "{{ request.user.profile.nickname|default:request.user.username }}";
     const studyRoomId = "{{ study.id }}";
+    const myAvatarIndex = "{{ request.user.profile.avatar_index|default:1 }}";
 
-    // UI 요소 가져오기
+    let myLevel = parseInt("{{ request.user.profile.level|default:1 }}", 10);
+    
+    const catRoom = document.getElementById('cat-room');
+    const catMessage = document.getElementById('cat-message');
+    const catBadge = document.querySelector('.cat-badge');
+    const skins = ['skin-1', 'skin-2', 'skin-3', 'skin-4', 'skin-5', 'skin-6'];
+    const poses = ['pose-sit', 'pose-lay', 'pose-walk', 'pose-run'];
+
+    function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function getRandomSkin() { return skins[randomInt(0, skins.length - 1)]; }
+
+    // 🐱 고양이 생성 함수
+    function spawnCat(isMain = false) {
+        const cat = document.createElement('div');
+        
+        // 스킨/포즈 랜덤 (메인은 기본 스킨/앉기 고정)
+        const skin = isMain ? 'skin-1' : getRandomSkin();
+        const pose = isMain ? 'pose-sit' : poses[randomInt(0, poses.length - 1)];
+        
+        cat.className = `sprite-cat ${skin} ${pose}`;
+
+        // 랜덤 위치 배치 (단, 메인 고양이는 CSS에서 중앙 정렬하므로 style.left 안 줌)
+        if (!isMain) {
+            // pose-run은 화면을 가로지르므로 left 설정 불필요 (애니메이션이 제어)
+            if (pose !== 'pose-run') {
+                cat.style.left = randomInt(5, 85) + '%';
+                cat.style.bottom = randomInt(20, 80) + 'px';
+                cat.style.zIndex = 100 - parseInt(cat.style.bottom); // 원근감
+            }
+            
+            // 랜덤 방향 (좌우 반전)
+            if (Math.random() > 0.5) {
+                cat.style.transform = "scale(2) scaleX(-1)"; 
+            }
+        }
+
+        // 말풍선
+        const bubble = document.createElement('div');
+        bubble.className = 'cat-bubble';
+        bubble.innerText = isMain ? "나" : "냥!";
+        if (cat.style.transform.includes("scaleX(-1)")) {
+            bubble.style.transform = "translateX(50%) scaleX(-1) scale(0.5)"; 
+        }
+        cat.appendChild(bubble);
+
+        catRoom.appendChild(cat);
+    }
+
+    function updateCatFamily(level) {
+        // 기존 고양이 제거 (가구(.prop)는 남김)
+        const oldCats = catRoom.querySelectorAll('.sprite-cat');
+        oldCats.forEach(c => c.remove());
+
+        // 1. 나 (Main)
+        spawnCat(true);
+
+        // 2. 친구들 (레벨에 따라 추가, 최대 20마리)
+        const friendCount = Math.min(Math.floor(level / 2), 20);
+        for (let i = 0; i < friendCount; i++) {
+            spawnCat(false);
+        }
+
+        if (catMessage) catMessage.innerText = `총 ${friendCount + 1}마리의 가족!`;
+        if (catBadge) catBadge.innerText = "Lv. " + level;
+    }
+
+    updateCatFamily(myLevel);
+
+    // --- (아래 기존 로직 동일) ---
     const timerFace = document.querySelector('.timer .face');
     const ctaButtonContainer = document.querySelector('.timer .cta');
     const ctaButtonSpan = ctaButtonContainer ? ctaButtonContainer.querySelector('span') : null;
     const memberRowsContainer = document.querySelector('.members');
-    
-    // 채팅 관련 요소
     const chatInput = document.getElementById('chat-input');
     const chatBox = document.getElementById('chat-box');
 
-    // 타이머 변수
     let myCurrentTime = parseInt("{{ initial_time|default:'0' }}", 10);
     if (isNaN(myCurrentTime)) myCurrentTime = 0;
-    
     let timerInterval = null;
     let isStudying = false;
 
-    // ----------------------------------------------------
-    // 2. 타이머 기능
-    // ----------------------------------------------------
     function formatTime(seconds) {
         const h = String(Math.floor(seconds / 3600));
         const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
         const s = String(seconds % 60).padStart(2, '0');
         return `${h}:${m}:${s}`;
     }
-
     timerFace.textContent = formatTime(myCurrentTime);
 
     function updateTimerUI(studying) {
@@ -169,58 +397,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ctaButtonContainer && ctaButtonSpan) {
         ctaButtonContainer.addEventListener('click', () => {
             const action = isStudying ? 'stop' : 'start';
-            socket.emit('timer_action', {
-                room: studyRoomId,
-                userId: myUserId,
-                action: action,
-                currentTime: myCurrentTime
-            });
+            socket.emit('timer_action', { room: studyRoomId, userId: myUserId, action: action, currentTime: myCurrentTime });
             updateTimerUI(!isStudying);
         });
     }
 
-    // ----------------------------------------------------
-    // 3. 채팅 기능 (수정됨)
-    // ----------------------------------------------------
     if (chatInput) {
         chatInput.addEventListener('keydown', (e) => {
-            // 한글 입력 중(조합 중)일 때는 엔터 이벤트를 무시 (중복 전송 방지)
             if (e.isComposing) return;
-
             if (e.key === 'Enter') {
                 const msg = chatInput.value.trim();
                 if (!msg) return;
-
-                console.log("메시지 전송:", msg); // 디버깅용
-
-                socket.emit('chat_message', {
-                    room: studyRoomId,
-                    nickname: myNickname,
-                    message: msg,
-                    userId: myUserId
-                });
-
-                chatInput.value = ''; // 입력창 비우기
+                socket.emit('chat_message', { room: studyRoomId, nickname: myNickname, message: msg, userId: myUserId, avatar: myAvatarIndex});
+                chatInput.value = ''; 
             }
         });
     }
 
-    // ----------------------------------------------------
-    // 4. 소켓 이벤트 리스너
-    // ----------------------------------------------------
     socket.on('connect', () => {
-        console.log('✅ 소켓 연결됨');
         if (studyRoomId && myUserId && myUserId !== 'None') {
             socket.emit('join_room', { roomId: studyRoomId, userId: myUserId });
         }
     });
 
-    // 타이머/상태 업데이트 수신
     socket.on('status_update', (allUsersStatus) => {
         const myUserIdString = String(myUserId);
         const myStatus = allUsersStatus[myUserIdString];
 
-        // 내 상태 동기화
         if (myStatus) {
             if (myStatus.time > myCurrentTime) {
                 myCurrentTime = myStatus.time;
@@ -229,9 +432,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isStudying !== myStatus.isStudying) {
                 updateTimerUI(myStatus.isStudying);
             }
+            
+            const calculatedLevel = Math.floor(myCurrentTime / 300) + 1;
+            if (calculatedLevel > myLevel) {
+                myLevel = calculatedLevel; 
+                updateCatFamily(myLevel);
+            }
         }
 
-        // 다른 멤버 업데이트
         memberRowsContainer.querySelectorAll('.row').forEach(row => {
             const memberId = String(row.dataset.userId);
             const status = allUsersStatus[memberId];
@@ -239,8 +447,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const statusPill = row.querySelector('.state');
             const timeBox = row.querySelector('.timebox');
+            const lvlBox = row.querySelector('.lvl');
 
-            if (status.time) timeBox.textContent = formatTime(status.time);
+            if (status.time) {
+                timeBox.textContent = formatTime(status.time);
+                const otherLevel = Math.floor(status.time / 300) + 1;
+                if(lvlBox) lvlBox.textContent = "Lv. " + otherLevel;
+            }
 
             statusPill.classList.remove('on', 'off');
             if (status.isStudying) {
@@ -253,17 +466,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 채팅 메시지 수신
+    // 채팅 수신 (프로필 사진 추가됨)
     socket.on('new_chat', (data) => {
-        const div = document.createElement('div');
-        if (String(data.userId) === String(myUserId)) {
-            div.className = 'msg me';
-            div.textContent = data.message;
-        } else {
-            div.className = 'msg other';
-            div.innerHTML = `<span class="msg-name">${data.nickname}</span>${data.message}`;
+        // 1. 전체를 감싸는 줄(Row) 생성
+        const row = document.createElement('div');
+        
+        // 2. 내가 보낸 건지 확인
+        const isMe = (String(data.userId) === String(myUserId));
+        row.className = isMe ? 'msg-row me' : 'msg-row other';
+
+        // 3. 상대방일 경우에만 프로필 사진 추가
+        if (!isMe) {
+            const img = document.createElement('img');
+            // 아바타 번호가 없으면 기본값 1
+            const avatarNum = data.avatar || 1;
+            // static 경로 설정 (Django 템플릿 문법과 JS 결합)
+            img.src = "{% static 'img/cat_' %}" + avatarNum + ".png";
+            img.className = 'chat-profile-img';
+            row.appendChild(img);
         }
-        chatBox.appendChild(div);
+
+        // 4. 말풍선 생성
+        const bubble = document.createElement('div');
+        bubble.className = isMe ? 'msg me' : 'msg other';
+        
+        if (!isMe) {
+            // 상대방은 닉네임도 표시
+            bubble.innerHTML = `<span class="msg-name">${data.nickname}</span>${data.message}`;
+        } else {
+            bubble.textContent = data.message;
+        }
+
+        row.appendChild(bubble);
+
+        // 5. 채팅창에 추가
+        chatBox.appendChild(row);
         chatBox.scrollTop = chatBox.scrollHeight;
     });
 });
@@ -271,80 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
 {% endblock %}
 
 {% block chat_input %}
-<style>
-    /* 채팅 전체 래퍼 */
-    .chat-wrapper { 
-        max-width: 1100px;
-        margin: 0 auto 26px;
-        padding: 0 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    /* 메시지가 쌓이는 공간 */
-    .chat-box {
-        height: 350px; /* 이거 수정해서 세로길이 늘리면 된 */
-        background: #161821;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 16px;
-        overflow-y: auto; 
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    /* 개별 메시지 말풍선 */
-    .msg {
-        max-width: 80%;
-        padding: 8px 12px;
-        border-radius: 10px;
-        font-size: 14px;
-        line-height: 1.4;
-        word-break: break-all;
-    }
-
-    /* 상대방 메시지 (왼쪽) */
-    .msg.other {
-        align-self: flex-start;
-        background: #23273a;
-        color: var(--ink);
-        border-top-left-radius: 0;
-    }
-    /* 상대방 이름 작게 표시 */
-    .msg-name {
-        font-size: 11px;
-        color: var(--muted);
-        margin-bottom: 2px;
-        display: block;
-    }
-
-    /* 내 메시지 (오른쪽) */
-    .msg.me {
-        align-self: flex-end;
-        background: var(--accent); /* 포인트 컬러 */
-        color: #0b0c12; /* 검은 글씨 */
-        border-top-right-radius: 0;
-        font-weight: 600;
-    }
-
-    /* 입력창 스타일 (기존 유지 + 수정) */
-    .chat-input-row {
-        display: flex;
-        gap: 10px;
-    }
-    .chat-input {
-        flex: 1;
-        background: #161821;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 14px 16px;
-        color: var(--ink);
-    }
-    .chat-input:focus { outline: 1px solid var(--accent); }
-</style>
-
 <div class="chat-wrapper">
     <div class="chat-box" id="chat-box">
         <div style="text-align:center; color:gray; font-size:12px; margin-top:10px;">
@@ -358,28 +521,3 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 </div>
 {% endblock %}
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var backBtn = document.querySelector('.topbar .btn[aria-label="뒤로"]');
-    var homeBtn = document.querySelector('.topbar .btn[aria-label="홈"]');
-
-    // 뒤로 버튼: 브라우저 뒤로가기, 히스토리 없으면 board 페이지로
-    if (backBtn) {
-        backBtn.addEventListener('click', function () {
-            if (window.history.length > 1) {
-                window.history.back();
-            } else {
-                window.location.href = "{% url 'board' %}";
-            }
-        });
-    }
-
-    // 홈 버튼: 항상 board 페이지로
-    if (homeBtn) {
-        homeBtn.addEventListener('click', function () {
-            window.location.href = "{% url 'board' %}";
-        });
-    }
-});
-</script>
