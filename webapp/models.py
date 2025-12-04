@@ -24,6 +24,8 @@ class StudyGroup(models.Model):
     group_code = models.CharField(max_length=20, unique=True) # 그룹 코드 (URL에 사용: /study/A1B2C/)
     description = models.TextField(blank=True) # 소개글
     created_at = models.DateTimeField(auto_now_add=True) # 생성일
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups', null=True)
+    notice = models.TextField(blank=True, default="등록된 공지사항이 없습니다.")
     # ManyToMany 필드를 StudyGroupMember를 통해 관리하도록 명시
     members = models.ManyToManyField(
         User, 
@@ -31,6 +33,7 @@ class StudyGroup(models.Model):
         related_name='study_groups', 
         blank=True
     )
+    report_count = models.PositiveIntegerField(default=0)
     def __str__(self):
         return self.name
 # 3. 그룹별 누적 시간을 저장할 중간 모델 추가 (핵심)

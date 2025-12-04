@@ -245,10 +245,60 @@
         </div>
     </div>  
 
+    <div class="panel notice-board" style="padding: 15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--ink);">공지사항</h3>
+            {% if is_creator %}
+                <button onclick="toggleNoticeForm()" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px;">[수정]</button>
+            {% endif %}
+        </div>
+
+        <div id="notice-content" style="background:#23273a; padding:10px; border-radius:8px; font-size:14px; line-height:1.4; color:var(--ink); white-space: pre-wrap; min-height: 40px;">{{ study.notice }}</div>
+
+        {% if is_creator %}
+        <form id="notice-form" action="{% url 'update_notice' study.group_code %}" method="post" style="display:none; margin-top:10px;">
+            {% csrf_token %}
+            <textarea name="notice" style="width:100%; height:80px; background:#161821; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:8px; resize:vertical;">{{ study.notice }}</textarea>
+            <div style="text-align:right; margin-top:5px;">
+                <button type="button" onclick="toggleNoticeForm()" style="background:#3a1918; border:1px solid var(--line); color:#ff6b6b; padding:4px 8px; border-radius:6px; cursor:pointer;">취소</button>
+                <button type="submit" style="background:var(--accent); border:none; color:#0b0c12; padding:4px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">저장</button>
+            </div>
+        </form>
+
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--line); text-align: right;">
+            <form action="{% url 'delete_study' study.group_code %}" method="post" onsubmit="return confirm('정말 스터디를 삭제하시겠습니까? \n모든 멤버와 기록이 사라지며 복구할 수 없습니다.');">
+                {% csrf_token %}
+                <button type="submit" style="background: #3a1918; color: #ff6b6b; border: 1px solid #7a2a26; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">
+                    스터디 삭제
+                </button>
+            </form>
+        </div>
+
+        <script>
+            function toggleNoticeForm() {
+                const content = document.getElementById('notice-content');
+                const form = document.getElementById('notice-form');
+                if (form.style.display === 'none') {
+                    form.style.display = 'block';
+                    content.style.display = 'none';
+                } else {
+                    form.style.display = 'none';
+                    content.style.display = 'block';
+                }
+            }
+        </script>
+        {% endif %}
+    </div>
+
     <div class="panel members" aria-label="그룹원 현황">
         {% for member_link in groups %} 
         <div class="row" data-user-id="{{ member_link.user.id }}">
-            <div class="pill">{{ member_link.user.profile.nickname|default:member_link.user.username }}</div>
+            <div class="pill" style="display:flex; align-items:center; gap:4px;">
+                {% if member_link.user == study.creator %}
+                    <span title="방장">방장</span>
+                {% endif %}
+                {{ member_link.user.profile.nickname|default:member_link.user.username }}
+            </div>
             <div class="pill state off">OFF</div>
             <div class="timebox">{{ member_link.group_study_time|default:"0:00:00" }}</div>
             <div class="avatar"></div>
