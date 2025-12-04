@@ -51,4 +51,11 @@ urlpatterns = [
     
     # 비밀번호 변경 URL
     path('profile/password/', views.change_password, name='change_password'),
+
+    path('study/<str:group_code>/report/', views.report_study, name='report_study'),
+    
+    # 삭제 기능
+    path('study/<str:group_code>/delete/', views.delete_study, name='delete_study'),
+
+    path('study/<str:group_code>/notice/', views.update_notice, name='update_notice'),
 ]

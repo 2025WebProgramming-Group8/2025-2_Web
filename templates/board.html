@@ -24,39 +24,42 @@
     .search input{ width:100%; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:14px; padding:14px 16px; font-size:15px }
     .search input::placeholder{ color:var(--muted) }
 
-    /* Study list with CTA */
-    .list{ max-width:900px; margin:0 auto 40px; padding:0 20px; display:grid; grid-template-columns:1fr 120px; gap:12px }
+    /* List Layout (Grid 수정됨) */
+    .list { 
+        max-width:900px; margin:0 auto 40px; padding:0 20px; 
+        display:grid; 
+        /* 👇 [핵심 변경] 컬럼을 3개로 나눔: [왼쪽 버튼] [내용] [오른쪽 입장버튼] */
+        grid-template-columns: 80px 1fr 80px; 
+        gap:12px 
+    }
     
-    .cell{ background:var(--panel); border:1px solid var(--line); border-radius:12px; min-height:60px; display:flex; align-items:center; justify-content:center; padding:12px 16px }
+    .cell { background:var(--panel); border:1px solid var(--line); border-radius:12px; min-height:60px; display:flex; align-items:center; justify-content:center; padding:12px; }
     
-    /* 📌 [수정됨] 제목+설명글을 세로로 배치하기 위한 스타일 */
+    /* 1. 왼쪽 관리 버튼 영역 */
+    .cell.admin {
+        flex-direction: column; /* 버튼 위아래 배치 */
+        gap: 6px;
+        background: #161821;
+    }
+
+    /* 2. 가운데 이름/설명 영역 */
     .cell.name { 
         justify-content: center; 
-        align-items: flex-start; /* 왼쪽 정렬 */
-        flex-direction: column;  /* 위아래 배치 */
-        gap: 4px;                /* 제목과 설명 사이 간격 */
+        align-items: flex-start; 
+        flex-direction: column;  
+        gap: 4px;    
+        padding-left: 16px;
     }
     
-    /* 📌 [추가됨] 제목 스타일 */
-    .group-title {
-        font-weight: 700;
-        font-size: 16px;
-    }
-
-    /* 📌 [추가됨] 설명글 스타일 (회색, 작은 글씨) */
+    .group-title { font-weight: 700; font-size: 16px; }
     .group-desc {
-        font-size: 13px;
-        color: var(--muted);
-        font-weight: 400;
-        /* 긴 글자는 말줄임표(...) 처리 */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
+        font-size: 13px; color: var(--muted); font-weight: 400;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
     }
 
-    .cell.cta{ background:#1b1e29; cursor:pointer }
-    .cell.cta:hover{ outline:2px solid #2a2f47 }
+    /* 3. 오른쪽 입장 버튼 영역 */
+    .cell.cta { background:#1b1e29; cursor:pointer; font-weight: bold; font-size: 14px; }
+    .cell.cta:hover { outline:2px solid #2a2f47; }
 
     /* Create button */
     .create-wrap{ max-width:900px; margin:10px auto 30px; padding:0 20px; display:flex; justify-content:flex-end }
@@ -64,19 +67,13 @@
 
     /* Responsive */
     @media (max-width:700px){
-      .list{ grid-template-columns:1fr 96px }
+      .list{ grid-template-columns: 60px 1fr 60px; }
     }
 </style>
 
     <div class="search">
         <form method="get" action="{% url 'board' %}">
-            <input 
-                type="text" 
-                name="q" 
-                placeholder="과목명, 그룹명, 목표로 검색" 
-                aria-label="스터디 검색"
-                value="{{ request.GET.q|default:'' }}"
-            />
+            <input type="text" name="q" placeholder="과목명, 그룹명, 목표로 검색" aria-label="스터디 검색" value="{{ request.GET.q|default:'' }}" />
         </form>
     </div>
 
@@ -84,6 +81,25 @@
         
         {% if groups %}
             {% for group in groups %}
+            
+            <div class="cell admin">
+                <form action="{% url 'report_study' group.group_code %}" method="post" onsubmit="return confirm('이 스터디를 신고하시겠습니까?');" style="width:100%;">
+                    {% csrf_token %}
+                    <button type="submit" style="width:100%; background:none; border:1px solid #3a1918; color:#ff6b6b; border-radius:6px; padding:4px; cursor:pointer; font-size:12px;" title="신고">
+                        🚨
+                    </button>
+                </form>
+
+                {% if request.user.username == 'lazycat' %}
+                    <form action="{% url 'delete_study' group.group_code %}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');" style="width:100%;">
+                        {% csrf_token %}
+                        <button type="submit" style="width:100%; background:#ff6b6b; border:none; color:white; border-radius:6px; padding:4px; cursor:pointer; font-size:12px;">
+                            삭제
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
             <div class="cell name">
                 <div class="group-title">
                     [{{ group.subject }}] {{ group.name }}
@@ -94,15 +110,23 @@
                         {{ group.description|truncatechars:40 }}
                     </div>
                 {% endif %}
+                
+                {% if request.user.username == 'lazycat' and group.report_count > 0 %}
+                    <div style="font-size: 11px; color: #ff6b6b; margin-top: 2px;">
+                        (신고: {{ group.report_count }})
+                    </div>
+                {% endif %}
             </div>
 
             <div class="cell cta">
-                <a href="{% url 'timer' group_code=group.group_code %}">들어가기</a>
+                <a href="{% url 'timer' group_code=group.group_code %}" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                    입장
+                </a>
             </div>
             {% endfor %}
             
         {% else %}
-            <div class="cell name" style="grid-column: 1 / -1; justify-content: center; color: gray; align-items: center;">
+            <div class="cell name" style="grid-column: 1 / -1; justify-content: center; color: gray;">
                 아직 개설된 스터디가 없습니다.
             </div>
         {% endif %}

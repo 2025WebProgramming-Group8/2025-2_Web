@@ -1,7 +1,7 @@
 import json
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt # API 호출을 위해 필요
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum
@@ -165,7 +165,8 @@ def weekly_ranking(request: HttpRequest) -> HttpResponse:
 @login_required
 def study_timer(request: HttpRequest, group_code: str) -> HttpResponse:
     
-    study = get_object_or_404(StudyGroup, group_code=group_code) 
+    study = get_object_or_404(StudyGroup, group_code=group_code)
+    is_creator = (request.user == study.creator) 
     initial_time = 0
     is_member = False # 기본값: 멤버 아님
     member_data = StudyGroupMember.objects.filter(study_group=study).select_related('user', 'user__profile')
@@ -194,6 +195,7 @@ def study_timer(request: HttpRequest, group_code: str) -> HttpResponse:
         'is_member': is_member,      # True/False에 따라 타이머/가입 버튼 표시
         'initial_time': str(initial_time), 
         'groups': member_data,
+        'is_creator': is_creator,
     }
     return render(request, 'timer.html', context)
 
@@ -271,7 +273,7 @@ def create_study(request):
         if form.is_valid():
             try:
                 new_study = form.save(commit=False)
-
+                new_study.creator = request.user
                 # 고유 그룹 코드 생성 및 할당 (충돌 방지)
                 while True:
                     group_code = generate_random_code()
@@ -381,3 +383,43 @@ def change_password(request):
         'form': form,
     }
     return render(request, 'change_password.html', context) # 템플릿 이름은 'change_password.html'로 가정
+
+# [추가 1] 스터디 신고하기 (누구나 가능)
+@login_required
+def report_study(request, group_code):
+    if request.method == 'POST':
+        study = get_object_or_404(StudyGroup, group_code=group_code)
+        study.report_count += 1 # 신고 횟수 1 증가
+        study.save()
+        # 신고 후 다시 게시판으로 돌아감
+        return redirect('board')
+    return redirect('board')
+
+@login_required
+def delete_study(request, group_code):
+    study = get_object_or_404(StudyGroup, group_code=group_code)
+    
+    # 권한 체크: 방장(creator) 이거나 관리자(lazycat) 인 경우만 허용
+    if request.user != study.creator and request.user.username != 'lazycat':
+        return HttpResponseForbidden("삭제 권한이 없습니다.")
+    
+    if request.method == 'POST':
+        study.delete() # DB에서 삭제
+        return redirect('board') # 삭제 후 게시판으로 이동
+    
+    return redirect('board')
+
+@login_required
+def update_notice(request, group_code):
+    study = get_object_or_404(StudyGroup, group_code=group_code)
+    
+    # 방장만 수정 가능
+    if request.user != study.creator:
+        return HttpResponseForbidden("방장만 수정할 수 있습니다.")
+        
+    if request.method == 'POST':
+        new_notice = request.POST.get('notice')
+        study.notice = new_notice
+        study.save()
+        
+    return redirect('timer', group_code=group_code)
